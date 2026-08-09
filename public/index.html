@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumina — controle de pacientes e procedimentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=IBM+Plex+Mono:wght@400;500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --ink:#241826;
+  --ink-60:rgba(36,24,38,.60);
+  --ink-40:rgba(36,24,38,.40);
+  --ink-12:rgba(36,24,38,.12);
+  --ink-06:rgba(36,24,38,.06);
+  --porcelain:#F8F5F7;
+  --branco:#FFFFFF;
+  --mulberry:#5C2A52;
+  --mulberry-esc:#3D1B37;
+  --lilas:#C7A3D4;
+  --jade:#2F7A66;
+  --jade-claro:#E4F0EB;
+  --rosa:#A8324A;
+  --rosa-claro:#F7E6E9;
+  --raio:14px;
+  --raio-p:9px;
+  --sombra:0 1px 2px rgba(36,24,38,.05), 0 8px 24px -12px rgba(36,24,38,.18);
+  --display:"Bodoni Moda", Georgia, "Times New Roman", serif;
+  --corpo:"Jost", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --dado:"IBM Plex Mono", "Consolas", monospace;
+  --hachura:repeating-linear-gradient(135deg, var(--rosa) 0 4px, rgba(168,50,74,.35) 4px 8px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--corpo);
+  background:var(--porcelain);
+  color:var(--ink);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--mulberry);outline-offset:2px;border-radius:4px}
+.oculto{display:none !important}
+.mono{font-family:var(--dado);font-variant-numeric:tabular-nums}
+
+/* ============================================================
+   MARCA
+   ============================================================ */
+.marca{display:flex;align-items:center;gap:11px}
+.marca-selo{
+  width:34px;height:34px;flex:0 0 34px;
+  display:grid;place-items:center;
+  background:var(--mulberry);color:#fff;
+  font-family:var(--display);font-size:17px;line-height:1;
+  border-radius:50% 50% 50% 4px;
+}
+.marca-nome{font-family:var(--display);font-size:19px;letter-spacing:.02em;line-height:1.1}
+.marca-sub{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-40)}
+
+/* ============================================================
+   ACESSO (login / cadastro / recuperação)
+   ============================================================ */
+#tela-acesso{min-height:100%;display:grid;grid-template-columns:1.05fr .95fr}
+.acesso-arte{
+  background:var(--mulberry-esc);
+  color:#F3E9F0;
+  padding:44px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.acesso-arte::after{
+  content:"";position:absolute;right:-160px;bottom:-200px;
+  width:520px;height:520px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(199,163,212,.55), rgba(199,163,212,0) 68%);
+}
+.acesso-arte .marca-selo{background:var(--lilas);color:var(--mulberry-esc)}
+.acesso-arte .marca-nome{color:#fff}
+.acesso-arte .marca-sub{color:rgba(243,233,240,.55)}
+.arte-titulo{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(30px,3.6vw,46px);line-height:1.12;
+  max-width:11ch;position:relative;z-index:1;
+}
+.arte-titulo em{font-style:italic;color:var(--lilas)}
+.arte-legenda{margin-top:16px;max-width:34ch;color:rgba(243,233,240,.68);font-weight:300;position:relative;z-index:1}
+.arte-rodape{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,233,240,.4);position:relative;z-index:1}
+
+.acesso-painel{display:grid;place-items:center;padding:40px 24px;background:var(--branco)}
+.acesso-caixa{width:100%;max-width:352px}
+.acesso-caixa h2{font-family:var(--display);font-weight:400;font-size:27px;margin-bottom:4px}
+.acesso-caixa .subtexto{color:var(--ink-60);font-weight:300;margin-bottom:26px}
+
+.campo{margin-bottom:15px}
+.campo label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-40);margin-bottom:6px}
+.campo input,.campo select,.campo textarea{
+  width:100%;padding:11px 13px;
+  background:var(--porcelain);
+  border:1px solid var(--ink-12);border-radius:var(--raio-p);
+  transition:border-color .15s, background .15s;
+}
+.campo input:focus,.campo select:focus,.campo textarea:focus{
+  outline:none;border-color:var(--mulberry);background:var(--branco);
+}
+.campo textarea{resize:vertical;min-height:70px}
+.campo-senha{position:relative}
+.campo-senha input{padding-right:56px}
+.olho{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-40);padding:4px 6px;
+}
+.olho:hover{color:var(--mulberry)}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 18px;border-radius:var(--raio-p);
+  font-weight:500;letter-spacing:.01em;
+  transition:transform .12s, background .15s, border-color .15s;
+}
+.btn:active{transform:translateY(1px)}
+.btn-cheio{background:var(--mulberry);color:#fff;width:100%}
+.btn-cheio:hover{background:var(--mulberry-esc)}
+.btn-linha{border:1px solid var(--ink-12);color:var(--ink)}
+.btn-linha:hover{border-color:var(--mulberry);color:var(--mulberry)}
+.btn-texto{color:var(--mulberry);font-size:14px;padding:6px 0}
+.btn-texto:hover{text-decoration:underline}
+.btn-p{padding:7px 12px;font-size:13px;border-radius:7px}
+
+.acesso-links{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px;flex-wrap:wrap}
+.aviso-demo{
+  margin-top:26px;padding:11px 13px;border-radius:var(--raio-p);
+  background:var(--porcelain);border:1px dashed var(--ink-12);
+  font-size:12.5px;color:var(--ink-60);
+}
+.aviso-demo b{font-family:var(--dado);font-weight:500;color:var(--ink)}
+.erro{color:var(--rosa);font-size:13px;margin-top:10px;min-height:19px}
+.codigo-demo{
+  background:var(--jade-claro);border:1px solid rgba(47,122,102,.25);
+  border-radius:var(--raio-p);padding:11px 13px;margin-bottom:15px;font-size:13px;color:#1F5A4B;
+}
+.codigo-demo strong{font-family:var(--dado);font-size:19px;letter-spacing:.22em;display:block;margin-top:4px}
+
+/* ============================================================
+   ESTRUTURA DO APP
+   ============================================================ */
+#tela-app{min-height:100%;display:grid;grid-template-columns:236px 1fr}
+.lateral{
+  background:var(--branco);border-right:1px solid var(--ink-12);
+  padding:24px 18px;display:flex;flex-direction:column;gap:28px;
+  position:sticky;top:0;height:100vh;
+}
+.menu{display:flex;flex-direction:column;gap:2px}
+.menu-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:var(--raio-p);
+  color:var(--ink-60);text-align:left;width:100%;
+  transition:background .15s,color .15s;
+}
+.menu-item:hover{background:var(--ink-06);color:var(--ink)}
+.menu-item.ativo{background:var(--mulberry);color:#fff}
+.menu-item .glifo{width:18px;text-align:center;font-size:15px}
+.lateral-rodape{margin-top:auto;border-top:1px solid var(--ink-12);padding-top:16px}
+.usuario{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.avatar{
+  width:32px;height:32px;flex:0 0 32px;border-radius:50%;
+  background:var(--lilas);color:var(--mulberry-esc);
+  display:grid;place-items:center;font-family:var(--display);font-size:14px;
+}
+.usuario-nome{font-size:13.5px;line-height:1.2}
+.usuario-email{font-size:11.5px;color:var(--ink-40);word-break:break-all}
+
+.conteudo{padding:34px 38px 90px;max-width:1180px}
+.cabecalho{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:26px}
+.cabecalho h1{font-family:var(--display);font-weight:400;font-size:34px;line-height:1.1}
+.cabecalho p{color:var(--ink-60);font-weight:300;margin-top:3px}
+.olhinho{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-40);margin-bottom:8px}
+
+/* ============================================================
+   ASSINATURA: barra de recebimento
+   ============================================================ */
+.recebimento{
+  background:var(--branco);border:1px solid var(--ink-12);border-radius:var(--raio);
+  padding:26px 28px;box-shadow:var(--sombra);margin-bottom:22px;
+}
+.recebimento-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+.recebimento-topo input[type=month]{
+  padding:7px 11px;border:1px solid var(--ink-12);border-radius:7px;background:var(--porcelain);font-size:13px;
+}
+.total-mes{font-family:var(--display);font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.total-mes small{font-family:var(--corpo);font-size:15px;color:var(--ink-40);margin-right:6px;vertical-align:middle}
+.barra{display:flex;height:46px;border-radius:8px;overflow:hidden;background:var(--ink-06)}
+.barra-parte{transition:width .5s cubic-bezier(.2,.7,.3,1);min-width:0}
+.barra-pago{background:var(--jade)}
+.barra-pendente{background:var(--hachura)}
+.barra-legenda{display:flex;gap:26px;margin-top:14px;flex-wrap:wrap}
+.legenda-item{display:flex;align-items:flex-start;gap:9px}
+.legenda-cor{width:11px;height:11px;border-radius:3px;margin-top:5px;flex:0 0 11px}
+.legenda-cor.pago{background:var(--jade)}
+.legenda-cor.pendente{background:var(--hachura)}
+.legenda-rot{font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-40)}
+.legenda-val{font-family:var(--dado);font-size:17px;font-weight:500}
+
+.grade-indicadores{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
+.indicador{background:var(--branco);border:1px solid var(--ink-12);border-radius:var(--raio);padding:18px 20px}
+.indicador .rot{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-40);margin-bottom:8px}
+.indicador .val{font-family:var(--display);font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.indicador .nota{font-size:12.5px;color:var(--ink-40);margin-top:6px;font-weight:300}
+
+.grade-dupla{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.bloco{background:var(--branco);border:1px solid var(--ink-12);border-radius:var(--raio);padding:22px 24px}
+.bloco h3{font-family:var(--display);font-weight:400;font-size:20px;margin-bottom:16px}
+
+.ranking-linha{margin-bottom:14px}
+.ranking-topo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:5px}
+.ranking-nome{font-size:14px}
+.ranking-qtd{font-family:var(--dado);font-size:12.5px;color:var(--ink-40)}
+.ranking-trilho{height:7px;background:var(--ink-06);border-radius:4px;overflow:hidden}
+.ranking-fita{height:100%;background:var(--mulberry);border-radius:4px;transition:width .5s}
+
+.pendencia{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--ink-06)}
+.pendencia:last-child{border-bottom:none}
+.pendencia-nome{font-size:14.5px}
+.pendencia-proc{font-size:12.5px;color:var(--ink-40)}
+.pendencia-dir{display:flex;align-items:center;gap:12px}
+.pendencia-val{font-family:var(--dado);font-weight:500;color:var(--rosa)}
+
+/* ============================================================
+   BARRA DE FERRAMENTAS
+   ============================================================ */
+.ferramentas{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.busca{position:relative;flex:1;min-width:200px}
+.busca input{width:100%;padding:10px 13px 10px 34px;border:1px solid var(--ink-12);border-radius:var(--raio-p);background:var(--branco)}
+.busca input:focus{outline:none;border-color:var(--mulberry)}
+.busca .glifo{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-40);font-size:13px}
+.filtros{display:flex;gap:6px;background:var(--ink-06);padding:3px;border-radius:9px}
+.filtro{padding:7px 13px;border-radius:7px;font-size:13px;color:var(--ink-60)}
+.filtro.ativo{background:var(--branco);color:var(--ink);box-shadow:0 1px 2px rgba(36,24,38,.08)}
+
+/* ============================================================
+   FICHA DO PACIENTE
+   ============================================================ */
+.fichas{display:flex;flex-direction:column;gap:12px}
+.ficha{
+  background:var(--branco);border:1px solid var(--ink-12);border-radius:var(--raio);
+  display:grid;grid-template-columns:7px 1fr;overflow:hidden;
+}
+.fita{background:var(--jade)}
+.fita.pendente{background:var(--hachura)}
+.ficha-corpo{padding:18px 20px}
+.ficha-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.ficha-nome{font-family:var(--display);font-size:21px;font-weight:400;line-height:1.2}
+.ficha-contato{font-size:12.5px;color:var(--ink-40);margin-top:2px}
+.ficha-acoes{display:flex;gap:6px;flex-wrap:wrap}
+.ficha-resumo{display:flex;gap:22px;margin:14px 0 6px;flex-wrap:wrap}
+.resumo-item .rot{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-40)}
+.resumo-item .val{font-family:var(--dado);font-size:15px;font-weight:500}
+.resumo-item .val.deve{color:var(--rosa)}
+.resumo-item .val.quitado{color:var(--jade)}
+
+.atendimentos{border-top:1px solid var(--ink-06);margin-top:12px}
+.atend{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--ink-06)}
+.atend:last-child{border-bottom:none}
+.atend-proc{font-size:14px}
+.atend-data{font-family:var(--dado);font-size:12.5px;color:var(--ink-40)}
+.atend-valor{font-family:var(--dado);font-size:14px;font-weight:500;text-align:right}
+.selo{
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border-radius:99px;white-space:nowrap;
+}
+.selo-pago{background:var(--jade-claro);color:#1F5A4B}
+.selo-pendente{background:var(--rosa-claro);color:var(--rosa)}
+.selo:hover{filter:brightness(.96)}
+.atend-lixo{color:var(--ink-40);font-size:14px;padding:4px 6px}
+.atend-lixo:hover{color:var(--rosa)}
+
+/* ============================================================
+   PROCEDIMENTOS
+   ============================================================ */
+.grade-proc{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.cartao-proc{
+  background:var(--branco);border:1px solid var(--ink-12);border-radius:var(--raio);
+  padding:20px;display:flex;flex-direction:column;gap:12px;
+}
+.proc-categoria{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mulberry)}
+.proc-nome{font-family:var(--display);font-size:21px;font-weight:400;line-height:1.15}
+.proc-preco{font-family:var(--dado);font-size:22px;font-weight:500}
+.proc-meta{font-size:12.5px;color:var(--ink-40);display:flex;gap:14px;flex-wrap:wrap}
+.proc-acoes{display:flex;gap:6px;margin-top:auto;padding-top:6px}
+
+/* ============================================================
+   GRÁFICO RECEITA × DESPESA
+   ============================================================ */
+.bloco-largo{grid-column:1/-1}
+.grafico-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.grafico-caixa{width:100%;overflow:hidden}
+.grafico-caixa svg{display:block;width:100%;height:auto}
+.eixo-linha{stroke:var(--ink-12);stroke-width:1}
+.eixo-zero{stroke:var(--ink-40);stroke-width:1}
+.eixo-rot{font-family:var(--dado);font-size:10px;fill:var(--ink-40)}
+.eixo-mes{font-family:var(--corpo);font-size:11px;fill:var(--ink-60);text-anchor:middle}
+.barra-receita{fill:var(--jade)}
+.barra-despesa{fill:var(--rosa)}
+.linha-lucro{fill:none;stroke:var(--mulberry);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.ponto-lucro{fill:var(--branco);stroke:var(--mulberry);stroke-width:2}
+.legenda-grafico{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--ink-06)}
+.lg{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-60)}
+.lg i{width:12px;height:12px;border-radius:3px;display:block;flex:0 0 12px}
+.lg i.receita{background:var(--jade)}
+.lg i.despesa{background:var(--rosa)}
+.lg i.lucro{background:var(--mulberry);height:3px;border-radius:2px;width:18px;flex:0 0 18px}
+
+.resultado{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--ink-12);border-radius:var(--raio);overflow:hidden;margin-bottom:22px}
+.resultado > div{background:var(--branco);padding:20px 22px}
+.resultado .rot{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-40);margin-bottom:7px}
+.resultado .val{font-family:var(--display);font-size:29px;line-height:1;font-variant-numeric:tabular-nums}
+.resultado .val.positivo{color:var(--jade)}
+.resultado .val.negativo{color:var(--rosa)}
+.resultado .nota{font-size:12px;color:var(--ink-40);margin-top:6px;font-weight:300}
+
+/* ============================================================
+   ESTOQUE
+   ============================================================ */
+.faixa-resumo{
+  display:flex;gap:26px;flex-wrap:wrap;align-items:center;
+  background:var(--branco);border:1px solid var(--ink-12);border-radius:var(--raio);
+  padding:18px 22px;margin-bottom:18px;
+}
+.faixa-item .rot{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-40)}
+.faixa-item .val{font-family:var(--display);font-size:24px;line-height:1.2}
+.faixa-item .val.alerta{color:var(--rosa)}
+
+.grade-estoque{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:14px}
+.cartao-item{background:var(--branco);border:1px solid var(--ink-12);border-radius:var(--raio);padding:20px;display:flex;flex-direction:column;gap:12px}
+.cartao-item.baixo{border-color:rgba(168,50,74,.4)}
+.item-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.item-nome{font-family:var(--display);font-size:20px;font-weight:400;line-height:1.15}
+.item-cat{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mulberry);margin-bottom:3px}
+.item-qtd{font-family:var(--dado);font-size:26px;font-weight:500;line-height:1}
+.item-qtd small{font-family:var(--corpo);font-size:13px;color:var(--ink-40);margin-left:4px}
+.nivel{height:7px;background:var(--ink-06);border-radius:4px;overflow:hidden}
+.nivel span{display:block;height:100%;border-radius:4px;background:var(--jade);transition:width .4s}
+.nivel span.baixo{background:var(--rosa)}
+.nivel span.zero{background:var(--hachura)}
+.item-meta{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--ink-40);flex-wrap:wrap}
+.item-acoes{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+
+/* ============================================================
+   DESPESAS
+   ============================================================ */
+.tabela{background:var(--branco);border:1px solid var(--ink-12);border-radius:var(--raio);overflow:hidden}
+.linha-desp{
+  display:grid;grid-template-columns:1fr 130px 92px 120px auto auto;
+  gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--ink-06);
+}
+.linha-desp:last-child{border-bottom:none}
+.linha-desp.cabec{
+  background:var(--porcelain);
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-40);padding:11px 20px;
+}
+.desp-nome{font-size:14.5px}
+.desp-cat{display:inline-block;font-size:11px;letter-spacing:.06em;padding:4px 9px;border-radius:99px;background:var(--ink-06);color:var(--ink-60)}
+.desp-data{font-family:var(--dado);font-size:12.5px;color:var(--ink-40)}
+.desp-valor{font-family:var(--dado);font-size:14.5px;font-weight:500;text-align:right}
+.desp-lixo{color:var(--ink-40);font-size:14px;padding:4px 6px}
+.desp-lixo:hover{color:var(--rosa)}
+
+/* ============================================================
+   VAZIO
+   ============================================================ */
+.vazio{
+  background:var(--branco);border:1px dashed var(--ink-12);border-radius:var(--raio);
+  padding:44px 26px;text-align:center;
+}
+.vazio h3{font-family:var(--display);font-weight:400;font-size:21px;margin-bottom:6px}
+.vazio p{color:var(--ink-60);font-weight:300;max-width:44ch;margin:0 auto 18px}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.cortina{
+  position:fixed;inset:0;background:rgba(36,24,38,.42);
+  display:grid;place-items:center;padding:20px;z-index:60;
+  animation:surge .18s ease-out;
+}
+.modal{
+  background:var(--branco);border-radius:var(--raio);width:100%;max-width:440px;
+  max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px -20px rgba(36,24,38,.4);
+  animation:sobe .2s cubic-bezier(.2,.7,.3,1);
+}
+.modal-topo{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:22px 24px 4px}
+.modal-topo h2{font-family:var(--display);font-weight:400;font-size:23px}
+.fechar{font-size:20px;color:var(--ink-40);line-height:1;padding:4px 8px}
+.fechar:hover{color:var(--ink)}
+.modal-corpo{padding:16px 24px 24px}
+.linha-dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-pe{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.escolha-status{display:flex;gap:8px}
+.escolha-status label{
+  flex:1;text-align:center;padding:10px;border:1px solid var(--ink-12);
+  border-radius:var(--raio-p);cursor:pointer;font-size:13.5px;transition:.15s;
+}
+.escolha-status input{position:absolute;opacity:0;width:0;height:0}
+.escolha-status label:has(input:checked){background:var(--mulberry);border-color:var(--mulberry);color:#fff}
+.escolha-status input:focus-visible + span{outline:2px solid var(--mulberry);outline-offset:3px}
+
+@keyframes surge{from{opacity:0}to{opacity:1}}
+@keyframes sobe{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* aviso flutuante */
+#aviso{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:99px;
+  font-size:13.5px;opacity:0;pointer-events:none;transition:.22s;z-index:90;
+}
+#aviso.mostra{opacity:1;transform:translateX(-50%)}
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+@media (max-width:900px){
+  #tela-acesso{grid-template-columns:1fr}
+  .acesso-arte{display:none}
+  #tela-app{grid-template-columns:1fr}
+  .lateral{
+    position:fixed;bottom:0;left:0;right:0;top:auto;height:auto;
+    flex-direction:row;align-items:center;gap:0;padding:8px;
+    border-right:none;border-top:1px solid var(--ink-12);z-index:50;
+  }
+  .lateral .marca,.lateral-rodape{display:none}
+  .menu{flex-direction:row;width:100%;gap:4px}
+  .menu-item{flex-direction:column;gap:3px;font-size:11px;justify-content:center;padding:8px 4px}
+  .conteudo{padding:24px 18px 100px}
+  .grade-dupla{grid-template-columns:1fr}
+  .cabecalho h1{font-size:28px}
+  .total-mes{font-size:36px}
+  .atend{grid-template-columns:1fr auto;row-gap:6px}
+  .atend-data{grid-column:1}
+  .resultado{grid-template-columns:1fr}
+  .menu-item{font-size:10px}
+  .menu-item .glifo{font-size:14px}
+  .linha-desp{grid-template-columns:1fr auto auto;row-gap:8px;padding:14px 16px}
+  .linha-desp.cabec{display:none}
+  .desp-cat{grid-column:1}
+  .desp-data{grid-column:1}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TELA DE ACESSO
+     ============================================================ -->
+<div id="tela-acesso">
+  <aside class="acesso-arte">
+    <div class="marca">
+      <div class="marca-selo">L</div>
+      <div>
+        <div class="marca-nome">Lumina</div>
+        <div class="marca-sub">clínica estética</div>
+      </div>
+    </div>
+    <div>
+      <h1 class="arte-titulo">Cada paciente, <em>cada pagamento</em>, no lugar certo.</h1>
+      <p class="arte-legenda">Fichas, procedimentos e pendências reunidos numa tela só — sem planilha, sem caderno.</p>
+    </div>
+    <div class="arte-rodape">Uso interno · recepção e financeiro</div>
+  </aside>
+
+  <main class="acesso-painel">
+    <div class="acesso-caixa">
+
+      <!-- ENTRAR -->
+      <section id="v-login">
+        <h2>Entrar</h2>
+        <p class="subtexto">Acesse a agenda financeira da clínica.</p>
+        <div class="campo">
+          <label for="login-email">E-mail</label>
+          <input type="email" id="login-email" autocomplete="username" placeholder="voce@clinica.com">
+        </div>
+        <div class="campo">
+          <label for="login-senha">Senha</label>
+          <div class="campo-senha">
+            <input type="password" id="login-senha" autocomplete="current-password" placeholder="••••••">
+            <button class="olho" type="button" data-alvo="login-senha">ver</button>
+          </div>
+        </div>
+        <div class="erro" id="login-erro"></div>
+        <button class="btn btn-cheio" id="btn-entrar">Entrar</button>
+        <div class="acesso-links">
+          <button class="btn-texto" data-vista="v-recuperar">Esqueci minha senha</button>
+          <button class="btn-texto" data-vista="v-cadastro">Criar uma conta</button>
+        </div>
+        <div class="aviso-demo">
+          Primeira vez aqui? Toque em <b>Criar uma conta</b> — cada conta tem a própria clínica, com pacientes e financeiro separados.
+        </div>
+      </section>
+
+      <!-- CRIAR CONTA -->
+      <section id="v-cadastro" class="oculto">
+        <h2>Criar uma conta</h2>
+        <p class="subtexto">Os dados ficam salvos neste computador.</p>
+        <div class="campo">
+          <label for="cad-nome">Seu nome</label>
+          <input type="text" id="cad-nome" placeholder="Como aparece na recepção">
+        </div>
+        <div class="campo">
+          <label for="cad-email">E-mail</label>
+          <input type="email" id="cad-email" placeholder="voce@clinica.com">
+        </div>
+        <div class="campo">
+          <label for="cad-senha">Senha</label>
+          <div class="campo-senha">
+            <input type="password" id="cad-senha" placeholder="mínimo 6 caracteres">
+            <button class="olho" type="button" data-alvo="cad-senha">ver</button>
+          </div>
+        </div>
+        <div class="erro" id="cad-erro"></div>
+        <button class="btn btn-cheio" id="btn-criar-conta">Criar conta</button>
+        <div class="acesso-links"><button class="btn-texto" data-vista="v-login">Voltar para o login</button></div>
+      </section>
+
+      <!-- RECUPERAR: e-mail -->
+      <section id="v-recuperar" class="oculto">
+        <h2>Recuperar senha</h2>
+        <p class="subtexto">Enviamos um código de 6 dígitos para conferir que é você.</p>
+        <div class="campo">
+          <label for="rec-email">E-mail da conta</label>
+          <input type="email" id="rec-email" placeholder="voce@clinica.com">
+        </div>
+        <div class="erro" id="rec-erro"></div>
+        <button class="btn btn-cheio" id="btn-enviar-codigo">Enviar código</button>
+        <div class="acesso-links"><button class="btn-texto" data-vista="v-login">Voltar para o login</button></div>
+      </section>
+
+      <!-- RECUPERAR: código -->
+      <section id="v-codigo" class="oculto">
+        <h2>Confirmar código</h2>
+        <p class="subtexto">Digite os 6 dígitos para liberar a troca de senha.</p>
+        <div class="codigo-demo oculto" id="caixa-codigo-demo">
+          Modo demonstração ligado — sem servidor de e-mail, o código aparece aqui:
+          <strong id="codigo-visivel">000000</strong>
+        </div>
+        <div class="campo">
+          <label for="cod-input">Código de 6 dígitos</label>
+          <input type="text" id="cod-input" inputmode="numeric" maxlength="6" class="mono" placeholder="000000">
+        </div>
+        <div class="erro" id="cod-erro"></div>
+        <button class="btn btn-cheio" id="btn-validar-codigo">Validar código</button>
+        <div class="acesso-links"><button class="btn-texto" data-vista="v-recuperar">Usar outro e-mail</button></div>
+      </section>
+
+      <!-- RECUPERAR: nova senha -->
+      <section id="v-nova-senha" class="oculto">
+        <h2>Nova senha</h2>
+        <p class="subtexto">Escolha uma senha de pelo menos 6 caracteres.</p>
+        <div class="campo">
+          <label for="ns-1">Nova senha</label>
+          <div class="campo-senha">
+            <input type="password" id="ns-1" placeholder="••••••">
+            <button class="olho" type="button" data-alvo="ns-1">ver</button>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="ns-2">Repita a nova senha</label>
+          <input type="password" id="ns-2" placeholder="••••••">
+        </div>
+        <div class="erro" id="ns-erro"></div>
+        <button class="btn btn-cheio" id="btn-salvar-senha">Salvar nova senha</button>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================
+     APP
+     ============================================================ -->
+<div id="tela-app" class="oculto">
+  <nav class="lateral">
+    <div class="marca">
+      <div class="marca-selo">L</div>
+      <div>
+        <div class="marca-nome">Lumina</div>
+        <div class="marca-sub">clínica estética</div>
+      </div>
+    </div>
+
+    <div class="menu">
+      <button class="menu-item ativo" data-aba="painel"><span class="glifo">◎</span> Painel</button>
+      <button class="menu-item" data-aba="pacientes"><span class="glifo">☰</span> Pacientes</button>
+      <button class="menu-item" data-aba="procedimentos"><span class="glifo">✦</span> Procedimentos</button>
+      <button class="menu-item" data-aba="estoque"><span class="glifo">▦</span> Estoque</button>
+      <button class="menu-item" data-aba="despesas"><span class="glifo">↓</span> Despesas</button>
+    </div>
+
+    <div class="lateral-rodape">
+      <div class="usuario">
+        <div class="avatar" id="user-inicial">—</div>
+        <div>
+          <div class="usuario-nome" id="user-nome">—</div>
+          <div class="usuario-email" id="user-email">—</div>
+        </div>
+      </div>
+      <button class="btn btn-linha btn-p" id="btn-sair" style="width:100%">Sair da conta</button>
+    </div>
+  </nav>
+
+  <main class="conteudo">
+
+    <!-- PAINEL -->
+    <section id="aba-painel">
+      <div class="cabecalho">
+        <div>
+          <div class="olhinho">Visão geral</div>
+          <h1>Painel</h1>
+          <p>O que entrou, o que falta entrar.</p>
+        </div>
+      </div>
+
+      <div class="recebimento">
+        <div class="recebimento-topo">
+          <div>
+            <div class="olhinho">Faturamento do mês</div>
+            <div class="total-mes" id="total-mes">R$ 0,00</div>
+          </div>
+          <div>
+            <label class="olhinho" for="mes-ref" style="display:block">Mês em análise</label>
+            <input type="month" id="mes-ref">
+          </div>
+        </div>
+        <div class="barra">
+          <div class="barra-parte barra-pago" id="barra-pago" style="width:0%"></div>
+          <div class="barra-parte barra-pendente" id="barra-pendente" style="width:0%"></div>
+        </div>
+        <div class="barra-legenda">
+          <div class="legenda-item">
+            <span class="legenda-cor pago"></span>
+            <span><span class="legenda-rot">Recebido</span><br><span class="legenda-val" id="val-recebido">R$ 0,00</span></span>
+          </div>
+          <div class="legenda-item">
+            <span class="legenda-cor pendente"></span>
+            <span><span class="legenda-rot">A receber</span><br><span class="legenda-val" id="val-pendente">R$ 0,00</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resultado">
+        <div>
+          <div class="rot">Receita</div>
+          <div class="val" id="res-receita">R$ 0,00</div>
+          <div class="nota">tudo que foi atendido no mês</div>
+        </div>
+        <div>
+          <div class="rot">Despesa</div>
+          <div class="val" id="res-despesa">R$ 0,00</div>
+          <div class="nota">fixas, variáveis e compra de produtos</div>
+        </div>
+        <div>
+          <div class="rot">Lucro</div>
+          <div class="val" id="res-lucro">R$ 0,00</div>
+          <div class="nota" id="res-margem">margem —</div>
+        </div>
+      </div>
+
+      <div class="bloco bloco-largo" style="margin-bottom:22px">
+        <div class="grafico-topo">
+          <div>
+            <div class="olhinho">Últimos 6 meses</div>
+            <h3 style="margin:0">Receita × Despesa</h3>
+          </div>
+        </div>
+        <div class="grafico-caixa" id="grafico"></div>
+        <div class="legenda-grafico">
+          <span class="lg"><i class="receita"></i> Receita</span>
+          <span class="lg"><i class="despesa"></i> Despesa</span>
+          <span class="lg"><i class="lucro"></i> Lucro</span>
+        </div>
+      </div>
+
+      <div class="grade-indicadores">
+        <div class="indicador">
+          <div class="rot">Atendimentos</div>
+          <div class="val" id="ind-atend">0</div>
+          <div class="nota">no mês selecionado</div>
+        </div>
+        <div class="indicador">
+          <div class="rot">Ticket médio</div>
+          <div class="val" id="ind-ticket">R$ 0</div>
+          <div class="nota">por procedimento realizado</div>
+        </div>
+        <div class="indicador">
+          <div class="rot">Pacientes devendo</div>
+          <div class="val" id="ind-devendo">0</div>
+          <div class="nota">somando todos os meses</div>
+        </div>
+        <div class="indicador">
+          <div class="rot">Estoque abaixo do mínimo</div>
+          <div class="val" id="ind-estoque">0</div>
+          <div class="nota">produtos para repor</div>
+        </div>
+      </div>
+
+      <div class="grade-dupla">
+        <div class="bloco">
+          <h3>Procedimentos mais realizados</h3>
+          <div id="ranking"></div>
+        </div>
+        <div class="bloco">
+          <h3>Pendências em aberto</h3>
+          <div id="lista-pendencias"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PACIENTES -->
+    <section id="aba-pacientes" class="oculto">
+      <div class="cabecalho">
+        <div>
+          <div class="olhinho">Fichas</div>
+          <h1>Pacientes</h1>
+          <p>Quem passou, o que fez e se já pagou.</p>
+        </div>
+        <button class="btn btn-cheio" id="btn-novo-paciente" style="width:auto">+ Novo paciente</button>
+      </div>
+
+      <div class="ferramentas">
+        <div class="busca">
+          <span class="glifo">⌕</span>
+          <input type="search" id="busca-paciente" placeholder="Buscar por nome, telefone ou procedimento">
+        </div>
+        <div class="filtros" id="filtros-paciente">
+          <button class="filtro ativo" data-filtro="todos">Todos</button>
+          <button class="filtro" data-filtro="pendentes">Com pendência</button>
+          <button class="filtro" data-filtro="pagos">Quitados</button>
+        </div>
+      </div>
+
+      <div class="fichas" id="lista-pacientes"></div>
+    </section>
+
+    <!-- PROCEDIMENTOS -->
+    <section id="aba-procedimentos" class="oculto">
+      <div class="cabecalho">
+        <div>
+          <div class="olhinho">Tabela de preços</div>
+          <h1>Procedimentos</h1>
+          <p>Cadastre, ajuste o valor e edite quando quiser.</p>
+        </div>
+        <button class="btn btn-cheio" id="btn-novo-proc" style="width:auto">+ Novo procedimento</button>
+      </div>
+      <div class="grade-proc" id="lista-procedimentos"></div>
+    </section>
+
+    <!-- ESTOQUE -->
+    <section id="aba-estoque" class="oculto">
+      <div class="cabecalho">
+        <div>
+          <div class="olhinho">Insumos</div>
+          <h1>Estoque</h1>
+          <p>O que a clínica consome nos atendimentos.</p>
+        </div>
+        <button class="btn btn-cheio" id="btn-novo-item" style="width:auto">+ Novo produto</button>
+      </div>
+
+      <div class="faixa-resumo">
+        <div class="faixa-item">
+          <div class="rot">Capital parado</div>
+          <div class="val" id="est-capital">R$ 0,00</div>
+        </div>
+        <div class="faixa-item">
+          <div class="rot">Itens cadastrados</div>
+          <div class="val" id="est-itens">0</div>
+        </div>
+        <div class="faixa-item">
+          <div class="rot">Para repor</div>
+          <div class="val" id="est-repor">0</div>
+        </div>
+      </div>
+
+      <div class="ferramentas">
+        <div class="busca">
+          <span class="glifo">⌕</span>
+          <input type="search" id="busca-item" placeholder="Buscar produto ou categoria">
+        </div>
+        <div class="filtros" id="filtros-item">
+          <button class="filtro ativo" data-filtro="todos">Todos</button>
+          <button class="filtro" data-filtro="repor">Para repor</button>
+        </div>
+      </div>
+
+      <div class="grade-estoque" id="lista-estoque"></div>
+    </section>
+
+    <!-- DESPESAS -->
+    <section id="aba-despesas" class="oculto">
+      <div class="cabecalho">
+        <div>
+          <div class="olhinho">Saídas</div>
+          <h1>Despesas</h1>
+          <p>Aluguel, luz, produtos e tudo que sai do caixa.</p>
+        </div>
+        <button class="btn btn-cheio" id="btn-nova-despesa" style="width:auto">+ Nova despesa</button>
+      </div>
+
+      <div class="faixa-resumo">
+        <div class="faixa-item">
+          <div class="rot">Total do mês</div>
+          <div class="val" id="desp-total">R$ 0,00</div>
+        </div>
+        <div class="faixa-item">
+          <div class="rot">Já pago</div>
+          <div class="val" id="desp-pago">R$ 0,00</div>
+        </div>
+        <div class="faixa-item">
+          <div class="rot">A pagar</div>
+          <div class="val alerta" id="desp-aberto">R$ 0,00</div>
+        </div>
+        <div class="faixa-item" style="margin-left:auto">
+          <label class="rot" for="mes-despesa" style="display:block">Mês</label>
+          <input type="month" id="mes-despesa" style="padding:7px 11px;border:1px solid var(--ink-12);border-radius:7px;background:var(--porcelain);font-size:13px">
+        </div>
+      </div>
+
+      <div class="ferramentas">
+        <div class="busca">
+          <span class="glifo">⌕</span>
+          <input type="search" id="busca-despesa" placeholder="Buscar por descrição ou categoria">
+        </div>
+        <div class="filtros" id="filtros-despesa">
+          <button class="filtro ativo" data-filtro="todas">Todas</button>
+          <button class="filtro" data-filtro="abertas">Em aberto</button>
+          <button class="filtro" data-filtro="pagas">Pagas</button>
+        </div>
+      </div>
+
+      <div id="lista-despesas"></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="modais"></div>
+<div id="aviso"></div>
+
+<script>
+/* ============================================================
+   CONVERSA COM A API
+   ============================================================ */
+var TOKEN_CHAVE = 'lumina.token';
+var token = null;
+try { token = localStorage.getItem(TOKEN_CHAVE); } catch(e){}
+
+function guardarToken(t){
+  token = t;
+  try { t ? localStorage.setItem(TOKEN_CHAVE, t) : localStorage.removeItem(TOKEN_CHAVE); } catch(e){}
+}
+
+async function api(caminho, opcoes){
+  opcoes = opcoes || {};
+  var cabecalhos = {'Content-Type':'application/json'};
+  if(token) cabecalhos.Authorization = 'Bearer ' + token;
+
+  var resposta;
+  try{
+    resposta = await fetch(caminho, {
+      method: opcoes.metodo || 'GET',
+      headers: cabecalhos,
+      body: opcoes.corpo ? JSON.stringify(opcoes.corpo) : undefined
+    });
+  }catch(e){
+    throw new Error('Sem conexão com o servidor.');
+  }
+
+  if(resposta.status === 401){
+    guardarToken(null);
+    sairDaTela();
+    throw new Error('Sessão expirada. Entre de novo.');
+  }
+
+  var dados = null;
+  try { dados = await resposta.json(); } catch(e){}
+  if(!resposta.ok) throw new Error((dados && dados.erro) || 'Não deu certo. Tente de novo.');
+  return dados;
+}
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+var estado = { procedimentos:[], pacientes:[], produtos:[], despesas:[] };
+var usuario = null;
+var filtroPaciente = 'todos';
+var termoBusca = '';
+var filtroItem = 'todos';
+var buscaItem = '';
+var filtroDespesa = 'todas';
+var buscaDespesa = '';
+var codigoAtual = '';
+var emailRecuperacao = '';
+
+function id(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function hoje(){ return new Date(); }
+function isoData(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function dinheiro(v){
+  return (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+}
+function dataCurta(iso){
+  if(!iso) return '—';
+  var p = iso.split('-');
+  return p[2] + '/' + p[1];
+}
+function escapar(t){
+  return String(t == null ? '' : t)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function avisar(msg){
+  var el = document.getElementById('aviso');
+  el.textContent = msg;
+  el.classList.add('mostra');
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.classList.remove('mostra'); }, 2200);
+}
+
+/* ============================================================
+   CARGA DOS DADOS
+   ============================================================ */
+async function carregarDados(){
+  estado = await api('/api/dados');
+}
+
+// Toda alteracao grava no banco e recarrega o retrato completo da clinica.
+// E uma chamada a mais, mas garante que a tela nunca fica diferente do banco
+// quando duas pessoas mexem ao mesmo tempo.
+async function aplicar(caminho, metodo, corpo){
+  await api(caminho, {metodo:metodo, corpo:corpo});
+  await carregarDados();
+  desenharTudo();
+}
+
+/* ============================================================
+   ACESSO
+   ============================================================ */
+function trocarVista(idVista){
+  ['v-login','v-cadastro','v-recuperar','v-codigo','v-nova-senha'].forEach(function(v){
+    document.getElementById(v).classList.toggle('oculto', v !== idVista);
+  });
+  document.querySelectorAll('.erro').forEach(function(e){ e.textContent=''; });
+}
+document.querySelectorAll('[data-vista]').forEach(function(b){
+  b.addEventListener('click', function(){ trocarVista(b.dataset.vista); });
+});
+document.querySelectorAll('.olho').forEach(function(b){
+  b.addEventListener('click', function(){
+    var inp = document.getElementById(b.dataset.alvo);
+    var vendo = inp.type === 'text';
+    inp.type = vendo ? 'password' : 'text';
+    b.textContent = vendo ? 'ver' : 'ocultar';
+  });
+});
+
+// deixa o botao travado enquanto a requisicao esta no ar,
+// senao um clique duplo cria dois cadastros
+function ocupado(botao, ligado, textoOriginal){
+  botao.disabled = ligado;
+  botao.textContent = ligado ? 'Aguarde...' : textoOriginal;
+}
+
+document.getElementById('btn-entrar').addEventListener('click', async function(){
+  var botao = this, rotulo = 'Entrar';
+  var erro = document.getElementById('login-erro');
+  erro.textContent = '';
+  ocupado(botao, true, rotulo);
+  try{
+    var r = await api('/api/auth/entrar', {metodo:'POST', corpo:{
+      email: document.getElementById('login-email').value.trim().toLowerCase(),
+      senha: document.getElementById('login-senha').value
+    }});
+    guardarToken(r.token);
+    await entrar(r.usuario);
+  }catch(e){
+    erro.textContent = e.message;
+  }finally{
+    ocupado(botao, false, rotulo);
+  }
+});
+document.getElementById('login-senha').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') document.getElementById('btn-entrar').click();
+});
+
+document.getElementById('btn-criar-conta').addEventListener('click', async function(){
+  var botao = this, rotulo = 'Criar conta';
+  var erro = document.getElementById('cad-erro');
+  erro.textContent = '';
+  ocupado(botao, true, rotulo);
+  try{
+    var r = await api('/api/auth/registrar', {metodo:'POST', corpo:{
+      nome: document.getElementById('cad-nome').value.trim(),
+      email: document.getElementById('cad-email').value.trim().toLowerCase(),
+      senha: document.getElementById('cad-senha').value
+    }});
+    guardarToken(r.token);
+    avisar('Conta criada.');
+    await entrar(r.usuario);
+  }catch(e){
+    erro.textContent = e.message;
+  }finally{
+    ocupado(botao, false, rotulo);
+  }
+});
+
+document.getElementById('btn-enviar-codigo').addEventListener('click', async function(){
+  var botao = this, rotulo = 'Enviar código';
+  var erro = document.getElementById('rec-erro');
+  erro.textContent = '';
+  ocupado(botao, true, rotulo);
+  try{
+    emailRecuperacao = document.getElementById('rec-email').value.trim().toLowerCase();
+    var r = await api('/api/auth/esqueci', {metodo:'POST', corpo:{email: emailRecuperacao}});
+    var caixa = document.getElementById('caixa-codigo-demo');
+    if(r.codigo){
+      document.getElementById('codigo-visivel').textContent = r.codigo;
+      caixa.classList.remove('oculto');
+    }else{
+      caixa.classList.add('oculto');
+    }
+    document.getElementById('cod-input').value = '';
+    trocarVista('v-codigo');
+  }catch(e){
+    erro.textContent = e.message;
+  }finally{
+    ocupado(botao, false, rotulo);
+  }
+});
+
+// o codigo so e conferido junto com a nova senha, numa chamada so
+document.getElementById('btn-validar-codigo').addEventListener('click', function(){
+  var val = document.getElementById('cod-input').value.trim();
+  if(!/^\d{6}$/.test(val)){
+    document.getElementById('cod-erro').textContent = 'Digite os 6 dígitos.';
+    return;
+  }
+  codigoAtual = val;
+  trocarVista('v-nova-senha');
+});
+
+document.getElementById('btn-salvar-senha').addEventListener('click', async function(){
+  var botao = this, rotulo = 'Salvar nova senha';
+  var a = document.getElementById('ns-1').value;
+  var b = document.getElementById('ns-2').value;
+  var erro = document.getElementById('ns-erro');
+  erro.textContent = '';
+  if(a.length < 6){ erro.textContent = 'A senha precisa de pelo menos 6 caracteres.'; return; }
+  if(a !== b){ erro.textContent = 'As duas senhas estão diferentes.'; return; }
+  ocupado(botao, true, rotulo);
+  try{
+    await api('/api/auth/redefinir', {metodo:'POST', corpo:{
+      email: emailRecuperacao, codigo: codigoAtual, senha: a
+    }});
+    avisar('Senha atualizada.');
+    trocarVista('v-login');
+  }catch(e){
+    erro.textContent = e.message;
+  }finally{
+    ocupado(botao, false, rotulo);
+  }
+});
+
+async function entrar(conta){
+  usuario = conta;
+  document.getElementById('user-nome').textContent = conta.nome;
+  document.getElementById('user-email').textContent = conta.email;
+  document.getElementById('user-inicial').textContent = conta.nome.charAt(0).toUpperCase();
+
+  var d = hoje();
+  var mesAtual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  document.getElementById('mes-ref').value = mesAtual;
+  document.getElementById('mes-despesa').value = mesAtual;
+
+  await carregarDados();
+  document.getElementById('tela-acesso').classList.add('oculto');
+  document.getElementById('tela-app').classList.remove('oculto');
+  desenharTudo();
+}
+
+function sairDaTela(){
+  usuario = null;
+  document.getElementById('tela-app').classList.add('oculto');
+  document.getElementById('tela-acesso').classList.remove('oculto');
+  document.getElementById('login-senha').value = '';
+  trocarVista('v-login');
+}
+
+document.getElementById('btn-sair').addEventListener('click', function(){
+  guardarToken(null);
+  sairDaTela();
+});
+
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
+document.querySelectorAll('.menu-item').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.menu-item').forEach(function(x){ x.classList.remove('ativo'); });
+    b.classList.add('ativo');
+    ['painel','pacientes','procedimentos','estoque','despesas'].forEach(function(a){
+      document.getElementById('aba-'+a).classList.toggle('oculto', a !== b.dataset.aba);
+    });
+    window.scrollTo(0,0);
+  });
+});
+
+/* ============================================================
+   PAINEL
+   ============================================================ */
+document.getElementById('mes-ref').addEventListener('change', desenharPainel);
+
+function todosAtendimentos(){
+  var saida = [];
+  estado.pacientes.forEach(function(p){
+    p.atendimentos.forEach(function(a){ saida.push({paciente:p, at:a}); });
+  });
+  return saida;
+}
+
+function desenharPainel(){
+  var mes = document.getElementById('mes-ref').value;
+  var doMes = todosAtendimentos().filter(function(x){ return (x.at.data||'').slice(0,7) === mes; });
+
+  var recebido = 0, pendente = 0;
+  doMes.forEach(function(x){ if(x.at.pago) recebido += x.at.valor; else pendente += x.at.valor; });
+  var total = recebido + pendente;
+
+  document.getElementById('total-mes').textContent = dinheiro(total);
+  document.getElementById('val-recebido').textContent = dinheiro(recebido);
+  document.getElementById('val-pendente').textContent = dinheiro(pendente);
+  document.getElementById('barra-pago').style.width = (total ? (recebido/total*100) : 0) + '%';
+  document.getElementById('barra-pendente').style.width = (total ? (pendente/total*100) : 0) + '%';
+
+  // resultado do mês
+  var despesaMes = despesasDoMes(mes).reduce(function(s,d){ return s + d.valor; }, 0);
+  var lucro = total - despesaMes;
+  document.getElementById('res-receita').textContent = dinheiro(total);
+  document.getElementById('res-despesa').textContent = dinheiro(despesaMes);
+  var elL = document.getElementById('res-lucro');
+  elL.textContent = dinheiro(lucro);
+  elL.className = 'val ' + (lucro < 0 ? 'negativo' : 'positivo');
+  document.getElementById('res-margem').textContent =
+    total ? 'margem de ' + (lucro/total*100).toFixed(1).replace('.',',') + '%' : 'sem receita no mês';
+
+  document.getElementById('ind-atend').textContent = doMes.length;
+  document.getElementById('ind-ticket').textContent = doMes.length ? dinheiro(total/doMes.length) : dinheiro(0);
+  document.getElementById('ind-estoque').textContent = estado.produtos.filter(precisaRepor).length;
+
+  var devendo = estado.pacientes.filter(function(p){
+    return p.atendimentos.some(function(a){ return !a.pago; });
+  });
+  document.getElementById('ind-devendo').textContent = devendo.length;
+
+  desenharGrafico(mes);
+
+  // ranking de procedimentos do mês
+  var cont = {};
+  doMes.forEach(function(x){ cont[x.at.procNome] = (cont[x.at.procNome]||0) + 1; });
+  var ordenado = Object.keys(cont).map(function(k){ return {nome:k, qtd:cont[k]}; })
+                       .sort(function(a,b){ return b.qtd - a.qtd; }).slice(0,5);
+  var maior = ordenado.length ? ordenado[0].qtd : 1;
+  var elR = document.getElementById('ranking');
+  elR.innerHTML = ordenado.length ? ordenado.map(function(r){
+    return '<div class="ranking-linha">'
+      + '<div class="ranking-topo"><span class="ranking-nome">'+escapar(r.nome)+'</span>'
+      + '<span class="ranking-qtd">'+r.qtd+'×</span></div>'
+      + '<div class="ranking-trilho"><div class="ranking-fita" style="width:'+(r.qtd/maior*100)+'%"></div></div>'
+      + '</div>';
+  }).join('') : '<p style="color:var(--ink-40);font-weight:300">Nenhum atendimento lançado neste mês ainda.</p>';
+
+  // pendências (todos os meses)
+  var pend = todosAtendimentos().filter(function(x){ return !x.at.pago; })
+              .sort(function(a,b){ return (a.at.data||'').localeCompare(b.at.data||''); });
+  var elP = document.getElementById('lista-pendencias');
+  elP.innerHTML = pend.length ? pend.slice(0,6).map(function(x){
+    return '<div class="pendencia">'
+      + '<div><div class="pendencia-nome">'+escapar(x.paciente.nome)+'</div>'
+      + '<div class="pendencia-proc">'+escapar(x.at.procNome)+' · '+dataCurta(x.at.data)+'</div></div>'
+      + '<div class="pendencia-dir"><span class="pendencia-val">'+dinheiro(x.at.valor)+'</span>'
+      + '<button class="btn btn-linha btn-p js-quitar" data-p="'+x.paciente.id+'" data-a="'+x.at.id+'">Marcar pago</button></div>'
+      + '</div>';
+  }).join('') : '<p style="color:var(--ink-40);font-weight:300">Tudo quitado. Nenhum valor em aberto.</p>';
+}
+
+document.getElementById('lista-pendencias').addEventListener('click', function(e){
+  var b = e.target.closest('.js-quitar');
+  if(!b) return;
+  alternarPago(b.dataset.p, b.dataset.a, true);
+});
+
+/* ============================================================
+   PACIENTES
+   ============================================================ */
+document.getElementById('busca-paciente').addEventListener('input', function(e){
+  termoBusca = e.target.value.toLowerCase().trim();
+  desenharPacientes();
+});
+document.getElementById('filtros-paciente').addEventListener('click', function(e){
+  var b = e.target.closest('.filtro');
+  if(!b) return;
+  document.querySelectorAll('#filtros-paciente .filtro').forEach(function(x){ x.classList.remove('ativo'); });
+  b.classList.add('ativo');
+  filtroPaciente = b.dataset.filtro;
+  desenharPacientes();
+});
+
+function totaisPaciente(p){
+  var t = 0, dev = 0;
+  p.atendimentos.forEach(function(a){ t += a.valor; if(!a.pago) dev += a.valor; });
+  return {total:t, devendo:dev};
+}
+
+function desenharPacientes(){
+  var lista = estado.pacientes.slice();
+
+  if(termoBusca){
+    lista = lista.filter(function(p){
+      var alvo = (p.nome + ' ' + (p.telefone||'') + ' ' +
+                  p.atendimentos.map(function(a){ return a.procNome; }).join(' ')).toLowerCase();
+      return alvo.indexOf(termoBusca) !== -1;
+    });
+  }
+  if(filtroPaciente === 'pendentes'){
+    lista = lista.filter(function(p){ return p.atendimentos.some(function(a){ return !a.pago; }); });
+  }else if(filtroPaciente === 'pagos'){
+    lista = lista.filter(function(p){ return p.atendimentos.length && p.atendimentos.every(function(a){ return a.pago; }); });
+  }
+  lista.sort(function(a,b){ return a.nome.localeCompare(b.nome,'pt-BR'); });
+
+  var el = document.getElementById('lista-pacientes');
+
+  if(!lista.length){
+    el.innerHTML = '<div class="vazio"><h3>Nenhuma ficha por aqui</h3>'
+      + '<p>' + (termoBusca || filtroPaciente !== 'todos'
+          ? 'Nada bate com esse filtro. Limpe a busca ou volte para “Todos”.'
+          : 'Cadastre o primeiro paciente e lance o procedimento que ele fez.') + '</p>'
+      + '<button class="btn btn-linha js-novo-paciente">+ Novo paciente</button></div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(function(p){
+    var t = totaisPaciente(p);
+    var deve = t.devendo > 0;
+    var linhas = p.atendimentos.length
+      ? p.atendimentos.slice().sort(function(a,b){ return (b.data||'').localeCompare(a.data||''); }).map(function(a){
+          return '<div class="atend">'
+            + '<span class="atend-proc">'+escapar(a.procNome)+'</span>'
+            + '<span class="atend-data">'+dataCurta(a.data)+'</span>'
+            + '<span class="atend-valor">'+dinheiro(a.valor)+'</span>'
+            + '<span style="display:flex;gap:6px;align-items:center">'
+            + '<button class="selo '+(a.pago?'selo-pago':'selo-pendente')+' js-toggle" data-p="'+p.id+'" data-a="'+a.id+'" title="Clique para trocar o status">'
+            + (a.pago?'Pago':'Não pago')+'</button>'
+            + '<button class="atend-lixo js-del-atend" data-p="'+p.id+'" data-a="'+a.id+'" title="Remover atendimento">✕</button>'
+            + '</span></div>';
+        }).join('')
+      : '<div class="atend"><span class="atend-proc" style="color:var(--ink-40)">Nenhum procedimento lançado.</span></div>';
+
+    return '<article class="ficha">'
+      + '<div class="fita '+(deve?'pendente':'')+'"></div>'
+      + '<div class="ficha-corpo">'
+      +   '<div class="ficha-topo">'
+      +     '<div><div class="ficha-nome">'+escapar(p.nome)+'</div>'
+      +     '<div class="ficha-contato">'+escapar(p.telefone||'sem telefone')+(p.obs?' · '+escapar(p.obs):'')+'</div></div>'
+      +     '<div class="ficha-acoes">'
+      +       '<button class="btn btn-linha btn-p js-add-atend" data-p="'+p.id+'">+ Procedimento</button>'
+      +       '<button class="btn btn-linha btn-p js-edit-paciente" data-p="'+p.id+'">Editar</button>'
+      +       '<button class="btn btn-linha btn-p js-del-paciente" data-p="'+p.id+'">Excluir</button>'
+      +     '</div>'
+      +   '</div>'
+      +   '<div class="ficha-resumo">'
+      +     '<div class="resumo-item"><div class="rot">Total</div><div class="val">'+dinheiro(t.total)+'</div></div>'
+      +     '<div class="resumo-item"><div class="rot">'+(deve?'Em aberto':'Situação')+'</div>'
+      +       '<div class="val '+(deve?'deve':'quitado')+'">'+(deve?dinheiro(t.devendo):'Quitado')+'</div></div>'
+      +     '<div class="resumo-item"><div class="rot">Atendimentos</div><div class="val">'+p.atendimentos.length+'</div></div>'
+      +   '</div>'
+      +   '<div class="atendimentos">'+linhas+'</div>'
+      + '</div></article>';
+  }).join('');
+}
+
+document.getElementById('lista-pacientes').addEventListener('click', function(e){
+  var alvo;
+  if((alvo = e.target.closest('.js-toggle')))        return alternarPago(alvo.dataset.p, alvo.dataset.a);
+  if((alvo = e.target.closest('.js-del-atend')))     return removerAtendimento(alvo.dataset.p, alvo.dataset.a);
+  if((alvo = e.target.closest('.js-add-atend')))     return modalAtendimento(alvo.dataset.p);
+  if((alvo = e.target.closest('.js-edit-paciente'))) return modalPaciente(alvo.dataset.p);
+  if((alvo = e.target.closest('.js-del-paciente')))  return removerPaciente(alvo.dataset.p);
+  if(e.target.closest('.js-novo-paciente'))          return modalPaciente(null);
+});
+document.getElementById('btn-novo-paciente').addEventListener('click', function(){ modalPaciente(null); });
+
+function acharPaciente(pid){ return estado.pacientes.filter(function(p){ return p.id === pid; })[0]; }
+
+async function alternarPago(pid, aid, forcarPago){
+  var p = acharPaciente(pid); if(!p) return;
+  var a = p.atendimentos.filter(function(x){ return x.id === aid; })[0]; if(!a) return;
+  var novo = forcarPago === true ? true : !a.pago;
+  try{
+    await aplicar('/api/atendimentos/' + aid, 'PATCH', {pago:novo});
+    avisar(novo ? 'Marcado como pago.' : 'Voltou para não pago.');
+  }catch(e){ avisar(e.message); }
+}
+async function removerAtendimento(pid, aid){
+  if(!confirm('Remover este atendimento da ficha?')) return;
+  try{
+    await aplicar('/api/atendimentos/' + aid, 'DELETE');
+    avisar('Atendimento removido.');
+  }catch(e){ avisar(e.message); }
+}
+async function removerPaciente(pid){
+  var p = acharPaciente(pid); if(!p) return;
+  if(!confirm('Excluir ' + p.nome + ' e todos os atendimentos dela?')) return;
+  try{
+    await aplicar('/api/pacientes/' + pid, 'DELETE');
+    avisar('Paciente excluído.');
+  }catch(e){ avisar(e.message); }
+}
+
+/* ============================================================
+   PROCEDIMENTOS
+   ============================================================ */
+function vezesRealizado(procId){
+  var n = 0;
+  estado.pacientes.forEach(function(p){
+    p.atendimentos.forEach(function(a){ if(a.procId === procId) n++; });
+  });
+  return n;
+}
+
+function desenharProcedimentos(){
+  var el = document.getElementById('lista-procedimentos');
+  if(!estado.procedimentos.length){
+    el.innerHTML = '<div class="vazio" style="grid-column:1/-1"><h3>Tabela de preços vazia</h3>'
+      + '<p>Cadastre os procedimentos que a clínica oferece. Eles aparecem na hora de lançar um atendimento.</p>'
+      + '<button class="btn btn-linha js-novo-proc">+ Novo procedimento</button></div>';
+    return;
+  }
+  el.innerHTML = estado.procedimentos.slice().sort(function(a,b){
+    return a.categoria.localeCompare(b.categoria,'pt-BR') || a.nome.localeCompare(b.nome,'pt-BR');
+  }).map(function(pr){
+    return '<article class="cartao-proc">'
+      + '<div><div class="proc-categoria">'+escapar(pr.categoria||'Geral')+'</div>'
+      + '<div class="proc-nome">'+escapar(pr.nome)+'</div></div>'
+      + '<div class="proc-preco">'+dinheiro(pr.preco)+'</div>'
+      + '<div class="proc-meta"><span>'+(pr.duracao||0)+' min</span><span>'+vezesRealizado(pr.id)+' realizados</span></div>'
+      + '<div class="proc-acoes">'
+      +   '<button class="btn btn-linha btn-p js-edit-proc" data-id="'+pr.id+'">Editar</button>'
+      +   '<button class="btn btn-linha btn-p js-del-proc" data-id="'+pr.id+'">Excluir</button>'
+      + '</div></article>';
+  }).join('');
+}
+
+document.getElementById('lista-procedimentos').addEventListener('click', function(e){
+  var alvo;
+  if((alvo = e.target.closest('.js-edit-proc'))) return modalProcedimento(alvo.dataset.id);
+  if((alvo = e.target.closest('.js-del-proc'))) return removerProcedimento(alvo.dataset.id);
+  if(e.target.closest('.js-novo-proc')) return modalProcedimento(null);
+});
+document.getElementById('btn-novo-proc').addEventListener('click', function(){ modalProcedimento(null); });
+
+function removerProcedimento(pid){
+  var pr = estado.procedimentos.filter(function(x){ return x.id === pid; })[0]; if(!pr) return;
+  var usos = vezesRealizado(pid);
+  var texto = usos
+    ? 'Excluir "' + pr.nome + '"? Ele já foi lançado ' + usos + '× nas fichas — os atendimentos antigos continuam salvos.'
+    : 'Excluir "' + pr.nome + '" da tabela de preços?';
+  if(!confirm(texto)) return;
+  aplicar('/api/procedimentos/' + pid, 'DELETE')
+    .then(function(){ avisar('Procedimento excluído.'); })
+    .catch(function(e){ avisar(e.message); });
+}
+
+/* ============================================================
+   MODAIS
+   ============================================================ */
+function abrirModal(titulo, corpoHTML, aoConfirmar, rotuloBotao){
+  var caixa = document.getElementById('modais');
+  caixa.innerHTML = '<div class="cortina"><div class="modal" role="dialog" aria-modal="true">'
+    + '<div class="modal-topo"><h2>'+escapar(titulo)+'</h2><button class="fechar" aria-label="Fechar">×</button></div>'
+    + '<div class="modal-corpo">' + corpoHTML
+    + '<div class="erro" id="modal-erro"></div>'
+    + '<div class="modal-pe"><button class="btn btn-linha" data-acao="cancelar">Cancelar</button>'
+    + '<button class="btn btn-cheio" style="width:auto" data-acao="ok">'+escapar(rotuloBotao||'Salvar')+'</button></div>'
+    + '</div></div></div>';
+
+  function fechar(){ caixa.innerHTML = ''; document.removeEventListener('keydown', tecla); }
+  function tecla(e){ if(e.key === 'Escape') fechar(); }
+  document.addEventListener('keydown', tecla);
+
+  caixa.querySelector('.fechar').addEventListener('click', fechar);
+  caixa.querySelector('[data-acao="cancelar"]').addEventListener('click', fechar);
+  caixa.querySelector('.cortina').addEventListener('mousedown', function(e){
+    if(e.target.classList.contains('cortina')) fechar();
+  });
+  caixa.querySelector('[data-acao="ok"]').addEventListener('click', function(){
+    if(aoConfirmar(fechar) !== false){ /* o próprio callback fecha */ }
+  });
+  var primeiro = caixa.querySelector('input,select,textarea');
+  if(primeiro) primeiro.focus();
+  return fechar;
+}
+function erroModal(msg){ document.getElementById('modal-erro').textContent = msg; }
+
+function opcoesProcedimento(selecionado){
+  if(!estado.procedimentos.length) return '<option value="">Cadastre um procedimento primeiro</option>';
+  return estado.procedimentos.map(function(p){
+    return '<option value="'+p.id+'" data-preco="'+p.preco+'"'+(p.id===selecionado?' selected':'')+'>'
+      + escapar(p.nome) + ' — ' + dinheiro(p.preco) + '</option>';
+  }).join('');
+}
+
+/* --- paciente --- */
+function modalPaciente(pid){
+  var p = pid ? acharPaciente(pid) : null;
+  var novo = !p;
+  var html =
+      '<div class="campo"><label for="f-nome">Nome do paciente</label>'
+    + '<input id="f-nome" type="text" value="'+escapar(p?p.nome:'')+'" placeholder="Nome completo"></div>'
+    + '<div class="campo"><label for="f-tel">Telefone</label>'
+    + '<input id="f-tel" type="text" value="'+escapar(p?p.telefone:'')+'" placeholder="(11) 90000-0000"></div>'
+    + '<div class="campo"><label for="f-obs">Observações</label>'
+    + '<textarea id="f-obs" placeholder="Alergias, preferências de horário, o que precisar">'+escapar(p?p.obs:'')+'</textarea></div>';
+
+  if(novo){
+    html += '<div class="campo"><label for="f-proc">Primeiro procedimento (opcional)</label>'
+      + '<select id="f-proc"><option value="">Só cadastrar a ficha por enquanto</option>'
+      + opcoesProcedimento(null).replace('<option value="">Cadastre um procedimento primeiro</option>','')
+      + '</select></div>'
+      + '<div class="linha-dupla">'
+      + '<div class="campo"><label for="f-valor">Valor cobrado</label>'
+      + '<input id="f-valor" type="number" step="0.01" min="0" placeholder="0,00"></div>'
+      + '<div class="campo"><label for="f-data">Data</label>'
+      + '<input id="f-data" type="date" value="'+isoData(hoje())+'"></div></div>'
+      + '<div class="campo"><label>Pagamento</label><div class="escolha-status">'
+      + '<label><input type="radio" name="f-pago" value="1" checked><span>Pago</span></label>'
+      + '<label><input type="radio" name="f-pago" value="0"><span>Não pago</span></label>'
+      + '</div></div>';
+  }
+
+  abrirModal(novo ? 'Novo paciente' : 'Editar paciente', html, async function(fechar){
+    var nome = document.getElementById('f-nome').value.trim();
+    if(nome.length < 2){ erroModal('Escreva o nome do paciente.'); return; }
+    var corpo = {
+      nome: nome,
+      telefone: document.getElementById('f-tel').value.trim(),
+      obs: document.getElementById('f-obs').value.trim()
+    };
+    try{
+      if(novo){
+        var criado = await api('/api/pacientes', {metodo:'POST', corpo:corpo});
+        var sel = document.getElementById('f-proc');
+        if(sel && sel.value){
+          var valorDigitado = parseFloat(document.getElementById('f-valor').value);
+          await api('/api/pacientes/' + criado.id + '/atendimentos', {metodo:'POST', corpo:{
+            procId: sel.value,
+            valor: isNaN(valorDigitado) ? undefined : valorDigitado,
+            data: document.getElementById('f-data').value,
+            pago: document.querySelector('input[name="f-pago"]:checked').value === '1'
+          }});
+        }
+        avisar('Paciente cadastrado.');
+      }else{
+        await api('/api/pacientes/' + pid, {metodo:'PUT', corpo:corpo});
+        avisar('Ficha atualizada.');
+      }
+      await carregarDados(); desenharTudo(); fechar();
+    }catch(e){ erroModal(e.message); }
+  }, novo ? 'Cadastrar paciente' : 'Salvar alterações');
+
+  var sel = document.getElementById('f-proc');
+  if(sel){
+    sel.addEventListener('change', function(){
+      var op = sel.options[sel.selectedIndex];
+      var preco = op ? op.dataset.preco : '';
+      document.getElementById('f-valor').value = preco || '';
+    });
+  }
+}
+
+/* --- atendimento --- */
+function modalAtendimento(pid){
+  var p = acharPaciente(pid); if(!p) return;
+  if(!estado.procedimentos.length){
+    avisar('Cadastre um procedimento antes.');
+    return;
+  }
+  var html =
+      '<div class="campo"><label for="a-proc">Procedimento</label>'
+    + '<select id="a-proc">'+opcoesProcedimento(null)+'</select></div>'
+    + '<div class="linha-dupla">'
+    + '<div class="campo"><label for="a-valor">Valor cobrado</label>'
+    + '<input id="a-valor" type="number" step="0.01" min="0" value="'+estado.procedimentos[0].preco+'"></div>'
+    + '<div class="campo"><label for="a-data">Data</label>'
+    + '<input id="a-data" type="date" value="'+isoData(hoje())+'"></div></div>'
+    + '<div class="campo"><label>Pagamento</label><div class="escolha-status">'
+    + '<label><input type="radio" name="a-pago" value="1" checked><span>Pago</span></label>'
+    + '<label><input type="radio" name="a-pago" value="0"><span>Não pago</span></label>'
+    + '</div></div>';
+
+  abrirModal('Lançar procedimento — ' + p.nome, html, async function(fechar){
+    var sel = document.getElementById('a-proc');
+    if(!sel.value){ erroModal('Escolha um procedimento.'); return; }
+    var valor = parseFloat(document.getElementById('a-valor').value);
+    if(isNaN(valor) || valor < 0){ erroModal('Informe um valor válido.'); return; }
+    try{
+      await aplicar('/api/pacientes/' + pid + '/atendimentos', 'POST', {
+        procId: sel.value, valor: valor,
+        data: document.getElementById('a-data').value,
+        pago: document.querySelector('input[name="a-pago"]:checked').value === '1'
+      });
+      fechar(); avisar('Procedimento lançado.');
+    }catch(e){ erroModal(e.message); }
+  }, 'Lançar');
+
+  document.getElementById('a-proc').addEventListener('change', function(e){
+    var op = e.target.options[e.target.selectedIndex];
+    document.getElementById('a-valor').value = op.dataset.preco || '';
+  });
+}
+
+/* --- procedimento --- */
+function modalProcedimento(pid){
+  var pr = pid ? estado.procedimentos.filter(function(x){ return x.id === pid; })[0] : null;
+  var novo = !pr;
+  var html =
+      '<div class="campo"><label for="p-nome">Nome do procedimento</label>'
+    + '<input id="p-nome" type="text" value="'+escapar(pr?pr.nome:'')+'" placeholder="Ex.: Limpeza de pele profunda"></div>'
+    + '<div class="campo"><label for="p-cat">Categoria</label>'
+    + '<input id="p-cat" type="text" list="lista-cat" value="'+escapar(pr?pr.categoria:'')+'" placeholder="Facial, Corporal, Injetável...">'
+    + '<datalist id="lista-cat"><option>Facial</option><option>Corporal</option><option>Injetável</option>'
+    + '<option>Capilar</option><option>Estética</option><option>Depilação</option></datalist></div>'
+    + '<div class="linha-dupla">'
+    + '<div class="campo"><label for="p-preco">Preço (R$)</label>'
+    + '<input id="p-preco" type="number" step="0.01" min="0" value="'+(pr?pr.preco:'')+'" placeholder="0,00"></div>'
+    + '<div class="campo"><label for="p-dur">Duração (min)</label>'
+    + '<input id="p-dur" type="number" step="5" min="0" value="'+(pr?pr.duracao:'')+'" placeholder="60"></div></div>';
+
+  abrirModal(novo ? 'Novo procedimento' : 'Editar procedimento', html, async function(fechar){
+    var nome = document.getElementById('p-nome').value.trim();
+    var preco = parseFloat(document.getElementById('p-preco').value);
+    if(nome.length < 2){ erroModal('Escreva o nome do procedimento.'); return; }
+    if(isNaN(preco) || preco < 0){ erroModal('Informe o preço.'); return; }
+    var dados = {
+      nome:nome,
+      categoria: document.getElementById('p-cat').value.trim() || 'Geral',
+      preco: preco,
+      duracao: parseInt(document.getElementById('p-dur').value, 10) || 0
+    };
+    try{
+      if(novo){
+        await aplicar('/api/procedimentos', 'POST', dados);
+        avisar('Procedimento cadastrado.');
+      }else{
+        // o servidor tambem atualiza o nome nas fichas antigas
+        await aplicar('/api/procedimentos/' + pid, 'PUT', dados);
+        avisar('Procedimento atualizado.');
+      }
+      fechar();
+    }catch(e){ erroModal(e.message); }
+  }, novo ? 'Cadastrar' : 'Salvar alterações');
+}
+
+/* ============================================================
+   GRÁFICO RECEITA × DESPESA
+   ============================================================ */
+function despesasDoMes(mes){
+  return estado.despesas.filter(function(d){ return (d.data||'').slice(0,7) === mes; });
+}
+function receitaDoMes(mes){
+  return todosAtendimentos().filter(function(x){ return (x.at.data||'').slice(0,7) === mes; })
+         .reduce(function(s,x){ return s + x.at.valor; }, 0);
+}
+function ultimosMeses(mesRef, n){
+  var p = mesRef.split('-');
+  var base = new Date(parseInt(p[0],10), parseInt(p[1],10)-1, 1);
+  var saida = [];
+  for(var i = n-1; i >= 0; i--){
+    var d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+    saida.push({
+      chave: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'),
+      rotulo: d.toLocaleDateString('pt-BR', {month:'short'}).replace('.','')
+    });
+  }
+  return saida;
+}
+function valorCurto(v){
+  var a = Math.abs(v);
+  if(a >= 1000) return (v/1000).toFixed(a >= 10000 ? 0 : 1).replace('.',',') + 'k';
+  return String(Math.round(v));
+}
+
+function desenharGrafico(mesRef){
+  if(!mesRef || mesRef.indexOf('-') === -1){
+    var n = hoje();
+    mesRef = n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0');
+  }
+  var meses = ultimosMeses(mesRef, 6).map(function(m){
+    var r = receitaDoMes(m.chave);
+    var d = despesasDoMes(m.chave).reduce(function(s,x){ return s + x.valor; }, 0);
+    return {rotulo:m.rotulo, receita:r, despesa:d, lucro:r - d};
+  });
+
+  var L=54, R=12, T=10, B=42, W=760, H=300;
+  var pw = W - L - R, ph = H - T - B;
+
+  var maxV = 0, minV = 0;
+  meses.forEach(function(m){
+    maxV = Math.max(maxV, m.receita, m.despesa, m.lucro);
+    minV = Math.min(minV, m.lucro);
+  });
+  if(maxV === 0) maxV = 100;
+  maxV = maxV * 1.08;
+  var faixa = maxV - minV;
+
+  function y(v){ return T + ph * (maxV - v) / faixa; }
+
+  var gw = pw / meses.length;
+  var lb = 26, gap = 7;
+
+  var svg = '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Comparação entre receita e despesa dos últimos seis meses">';
+
+  // linhas de grade + rótulos do eixo
+  for(var i = 0; i <= 4; i++){
+    var v = minV + (faixa * i / 4);
+    var yy = y(v).toFixed(1);
+    svg += '<line class="eixo-linha" x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'"/>';
+    svg += '<text class="eixo-rot" x="'+(L-8)+'" y="'+(parseFloat(yy)+3.5)+'" text-anchor="end">'+valorCurto(v)+'</text>';
+  }
+  // linha do zero destacada quando há prejuízo
+  if(minV < 0){
+    svg += '<line class="eixo-zero" x1="'+L+'" y1="'+y(0).toFixed(1)+'" x2="'+(W-R)+'" y2="'+y(0).toFixed(1)+'"/>';
+  }
+
+  // barras
+  meses.forEach(function(m, k){
+    var centro = L + gw*k + gw/2;
+    var x1 = centro - lb - gap/2;
+    var x2 = centro + gap/2;
+    var y0 = y(0);
+
+    var hr = Math.max(2, y0 - y(m.receita));
+    var hd = Math.max(2, y0 - y(m.despesa));
+
+    svg += '<rect class="barra-receita" x="'+x1.toFixed(1)+'" y="'+(y0-hr).toFixed(1)+'" width="'+lb+'" height="'+hr.toFixed(1)+'" rx="3">'
+         + '<title>'+m.rotulo+' · receita '+dinheiro(m.receita)+'</title></rect>';
+    svg += '<rect class="barra-despesa" x="'+x2.toFixed(1)+'" y="'+(y0-hd).toFixed(1)+'" width="'+lb+'" height="'+hd.toFixed(1)+'" rx="3">'
+         + '<title>'+m.rotulo+' · despesa '+dinheiro(m.despesa)+'</title></rect>';
+
+    svg += '<text class="eixo-mes" x="'+centro.toFixed(1)+'" y="'+(H-16)+'">'+m.rotulo+'</text>';
+  });
+
+  // linha do lucro
+  var pontos = meses.map(function(m, k){
+    return (L + gw*k + gw/2).toFixed(1) + ',' + y(m.lucro).toFixed(1);
+  });
+  svg += '<polyline class="linha-lucro" points="'+pontos.join(' ')+'"/>';
+  meses.forEach(function(m, k){
+    svg += '<circle class="ponto-lucro" cx="'+(L + gw*k + gw/2).toFixed(1)+'" cy="'+y(m.lucro).toFixed(1)+'" r="4">'
+         + '<title>'+m.rotulo+' · lucro '+dinheiro(m.lucro)+'</title></circle>';
+  });
+
+  svg += '</svg>';
+  document.getElementById('grafico').innerHTML = svg;
+}
+
+/* ============================================================
+   ESTOQUE
+   ============================================================ */
+function precisaRepor(p){ return p.quantidade <= p.minimo; }
+
+document.getElementById('busca-item').addEventListener('input', function(e){
+  buscaItem = e.target.value.toLowerCase().trim();
+  desenharEstoque();
+});
+document.getElementById('filtros-item').addEventListener('click', function(e){
+  var b = e.target.closest('.filtro'); if(!b) return;
+  document.querySelectorAll('#filtros-item .filtro').forEach(function(x){ x.classList.remove('ativo'); });
+  b.classList.add('ativo');
+  filtroItem = b.dataset.filtro;
+  desenharEstoque();
+});
+document.getElementById('btn-novo-item').addEventListener('click', function(){ modalProduto(null); });
+
+function desenharEstoque(){
+  var capital = estado.produtos.reduce(function(s,p){ return s + p.quantidade * p.custo; }, 0);
+  document.getElementById('est-capital').textContent = dinheiro(capital);
+  document.getElementById('est-itens').textContent = estado.produtos.length;
+  var repor = estado.produtos.filter(precisaRepor);
+  var elR = document.getElementById('est-repor');
+  elR.textContent = repor.length;
+  elR.className = 'val' + (repor.length ? ' alerta' : '');
+
+  var lista = estado.produtos.slice();
+  if(buscaItem){
+    lista = lista.filter(function(p){
+      return (p.nome + ' ' + p.categoria).toLowerCase().indexOf(buscaItem) !== -1;
+    });
+  }
+  if(filtroItem === 'repor') lista = lista.filter(precisaRepor);
+  lista.sort(function(a,b){ return a.nome.localeCompare(b.nome,'pt-BR'); });
+
+  var el = document.getElementById('lista-estoque');
+  if(!lista.length){
+    el.innerHTML = '<div class="vazio" style="grid-column:1/-1"><h3>Estoque vazio</h3>'
+      + '<p>' + (buscaItem || filtroItem !== 'todos'
+          ? 'Nada bate com esse filtro.'
+          : 'Cadastre os produtos que a clínica consome para acompanhar quanto ainda tem e quando repor.') + '</p>'
+      + '<button class="btn btn-linha js-novo-item">+ Novo produto</button></div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(function(p){
+    var baixo = precisaRepor(p);
+    var zerado = p.quantidade <= 0;
+    var teto = Math.max(p.minimo * 2, p.quantidade, 1);
+    var pct = Math.min(100, (p.quantidade / teto) * 100);
+    var estadoTxt = zerado ? 'Acabou' : (baixo ? 'Repor' : 'Em dia');
+    return '<article class="cartao-item'+(baixo?' baixo':'')+'">'
+      + '<div class="item-topo">'
+      +   '<div><div class="item-cat">'+escapar(p.categoria||'Geral')+'</div>'
+      +   '<div class="item-nome">'+escapar(p.nome)+'</div></div>'
+      +   '<span class="selo '+(baixo?'selo-pendente':'selo-pago')+'">'+estadoTxt+'</span>'
+      + '</div>'
+      + '<div class="item-qtd">'+p.quantidade+'<small>'+escapar(p.unidade||'un')+'</small></div>'
+      + '<div class="nivel"><span class="'+(zerado?'zero':(baixo?'baixo':''))+'" style="width:'+pct.toFixed(0)+'%"></span></div>'
+      + '<div class="item-meta"><span>mínimo '+p.minimo+'</span><span>'+dinheiro(p.custo)+' / '+escapar(p.unidade||'un')+'</span></div>'
+      + '<div class="item-acoes">'
+      +   '<button class="btn btn-linha btn-p js-entrada" data-id="'+p.id+'">+ Entrada</button>'
+      +   '<button class="btn btn-linha btn-p js-baixa" data-id="'+p.id+'">− Baixa</button>'
+      +   '<button class="btn btn-linha btn-p js-edit-item" data-id="'+p.id+'">Editar</button>'
+      +   '<button class="btn btn-linha btn-p js-del-item" data-id="'+p.id+'">Excluir</button>'
+      + '</div></article>';
+  }).join('');
+}
+
+document.getElementById('lista-estoque').addEventListener('click', function(e){
+  var a;
+  if((a = e.target.closest('.js-entrada')))   return modalMovimento(a.dataset.id, 'entrada');
+  if((a = e.target.closest('.js-baixa')))     return modalMovimento(a.dataset.id, 'baixa');
+  if((a = e.target.closest('.js-edit-item'))) return modalProduto(a.dataset.id);
+  if((a = e.target.closest('.js-del-item')))  return removerProduto(a.dataset.id);
+  if(e.target.closest('.js-novo-item'))       return modalProduto(null);
+});
+
+function acharProduto(pid){ return estado.produtos.filter(function(p){ return p.id === pid; })[0]; }
+
+function removerProduto(pid){
+  var p = acharProduto(pid); if(!p) return;
+  if(!confirm('Excluir "' + p.nome + '" do estoque?')) return;
+  aplicar('/api/produtos/' + pid, 'DELETE')
+    .then(function(){ avisar('Produto excluído.'); })
+    .catch(function(e){ avisar(e.message); });
+}
+
+function modalProduto(pid){
+  var p = pid ? acharProduto(pid) : null;
+  var novo = !p;
+  var html =
+      '<div class="campo"><label for="i-nome">Nome do produto</label>'
+    + '<input id="i-nome" type="text" value="'+escapar(p?p.nome:'')+'" placeholder="Ex.: Ácido hialurônico 1ml"></div>'
+    + '<div class="linha-dupla">'
+    + '<div class="campo"><label for="i-cat">Categoria</label>'
+    + '<input id="i-cat" type="text" list="cat-item" value="'+escapar(p?p.categoria:'')+'" placeholder="Facial, Injetável...">'
+    + '<datalist id="cat-item"><option>Facial</option><option>Corporal</option><option>Injetável</option>'
+    + '<option>Descartável</option><option>Limpeza</option><option>Escritório</option></datalist></div>'
+    + '<div class="campo"><label for="i-un">Unidade</label>'
+    + '<input id="i-un" type="text" list="un-item" value="'+escapar(p?p.unidade:'un')+'" placeholder="un">'
+    + '<datalist id="un-item"><option>un</option><option>caixa</option><option>frasco</option>'
+    + '<option>seringa</option><option>pacote</option><option>ml</option><option>g</option></datalist></div></div>'
+    + '<div class="linha-dupla">'
+    + '<div class="campo"><label for="i-qtd">Quantidade atual</label>'
+    + '<input id="i-qtd" type="number" step="1" min="0" value="'+(p?p.quantidade:0)+'"></div>'
+    + '<div class="campo"><label for="i-min">Estoque mínimo</label>'
+    + '<input id="i-min" type="number" step="1" min="0" value="'+(p?p.minimo:1)+'"></div></div>'
+    + '<div class="campo"><label for="i-custo">Custo por unidade (R$)</label>'
+    + '<input id="i-custo" type="number" step="0.01" min="0" value="'+(p?p.custo:'')+'" placeholder="0,00"></div>';
+
+  abrirModal(novo ? 'Novo produto' : 'Editar produto', html, async function(fechar){
+    var nome = document.getElementById('i-nome').value.trim();
+    var custo = parseFloat(document.getElementById('i-custo').value);
+    if(nome.length < 2){ erroModal('Escreva o nome do produto.'); return; }
+    if(isNaN(custo) || custo < 0){ erroModal('Informe o custo por unidade.'); return; }
+    var dados = {
+      nome:nome,
+      categoria: document.getElementById('i-cat').value.trim() || 'Geral',
+      unidade: document.getElementById('i-un').value.trim() || 'un',
+      quantidade: parseInt(document.getElementById('i-qtd').value, 10) || 0,
+      minimo: parseInt(document.getElementById('i-min').value, 10) || 0,
+      custo: custo
+    };
+    try{
+      if(novo){
+        await aplicar('/api/produtos', 'POST', dados);
+        avisar('Produto cadastrado.');
+      }else{
+        await aplicar('/api/produtos/' + pid, 'PUT', dados);
+        avisar('Produto atualizado.');
+      }
+      fechar();
+    }catch(e){ erroModal(e.message); }
+  }, novo ? 'Cadastrar' : 'Salvar alterações');
+}
+
+function modalMovimento(pid, tipo){
+  var p = acharProduto(pid); if(!p) return;
+  var entrada = tipo === 'entrada';
+  var html =
+      '<p style="color:var(--ink-60);font-weight:300;margin-bottom:16px">Saldo atual: <b class="mono">'
+    + p.quantidade + ' ' + escapar(p.unidade) + '</b></p>'
+    + '<div class="campo"><label for="m-qtd">Quantidade</label>'
+    + '<input id="m-qtd" type="number" step="1" min="1" value="1"></div>';
+  if(entrada){
+    html += '<div class="campo"><label for="m-custo">Custo unitário desta compra (R$)</label>'
+      + '<input id="m-custo" type="number" step="0.01" min="0" value="'+p.custo+'"></div>'
+      + '<div class="campo"><label>Lançar no financeiro</label>'
+      + '<label style="display:flex;gap:9px;align-items:center;font-size:14px;cursor:pointer">'
+      + '<input type="checkbox" id="m-despesa" checked style="width:auto"> Criar despesa desta compra</label></div>';
+  }
+  abrirModal((entrada ? 'Entrada — ' : 'Baixa — ') + p.nome, html, async function(fechar){
+    var q = parseInt(document.getElementById('m-qtd').value, 10);
+    if(isNaN(q) || q < 1){ erroModal('Informe uma quantidade válida.'); return; }
+    var corpo = {tipo: entrada ? 'entrada' : 'baixa', quantidade: q};
+    if(entrada){
+      var custo = parseFloat(document.getElementById('m-custo').value);
+      if(isNaN(custo) || custo < 0){ erroModal('Informe o custo unitário.'); return; }
+      corpo.custo = custo;
+      corpo.gerarDespesa = document.getElementById('m-despesa').checked;
+    }
+    try{
+      await aplicar('/api/produtos/' + pid + '/movimento', 'POST', corpo);
+      fechar();
+      avisar(entrada
+        ? (corpo.gerarDespesa ? 'Entrada registrada e despesa lançada.' : 'Entrada registrada.')
+        : 'Baixa registrada.');
+    }catch(e){ erroModal(e.message); }
+  }, entrada ? 'Registrar entrada' : 'Registrar baixa');
+}
+
+/* ============================================================
+   DESPESAS
+   ============================================================ */
+document.getElementById('mes-despesa').addEventListener('change', desenharDespesas);
+document.getElementById('busca-despesa').addEventListener('input', function(e){
+  buscaDespesa = e.target.value.toLowerCase().trim();
+  desenharDespesas();
+});
+document.getElementById('filtros-despesa').addEventListener('click', function(e){
+  var b = e.target.closest('.filtro'); if(!b) return;
+  document.querySelectorAll('#filtros-despesa .filtro').forEach(function(x){ x.classList.remove('ativo'); });
+  b.classList.add('ativo');
+  filtroDespesa = b.dataset.filtro;
+  desenharDespesas();
+});
+document.getElementById('btn-nova-despesa').addEventListener('click', function(){ modalDespesa(null); });
+
+function desenharDespesas(){
+  var mes = document.getElementById('mes-despesa').value;
+  var doMes = despesasDoMes(mes);
+  var pago = 0, aberto = 0;
+  doMes.forEach(function(d){ if(d.pago) pago += d.valor; else aberto += d.valor; });
+  document.getElementById('desp-total').textContent = dinheiro(pago + aberto);
+  document.getElementById('desp-pago').textContent = dinheiro(pago);
+  document.getElementById('desp-aberto').textContent = dinheiro(aberto);
+
+  var lista = doMes.slice();
+  if(buscaDespesa){
+    lista = lista.filter(function(d){
+      return (d.descricao + ' ' + d.categoria).toLowerCase().indexOf(buscaDespesa) !== -1;
+    });
+  }
+  if(filtroDespesa === 'abertas') lista = lista.filter(function(d){ return !d.pago; });
+  if(filtroDespesa === 'pagas')   lista = lista.filter(function(d){ return d.pago; });
+  lista.sort(function(a,b){ return (a.data||'').localeCompare(b.data||''); });
+
+  var el = document.getElementById('lista-despesas');
+  if(!lista.length){
+    el.innerHTML = '<div class="vazio"><h3>Nenhuma despesa neste mês</h3>'
+      + '<p>Lance aluguel, energia, água, salários e compras de produto para o painel calcular o lucro real.</p>'
+      + '<button class="btn btn-linha js-nova-despesa">+ Nova despesa</button></div>';
+    return;
+  }
+
+  el.innerHTML = '<div class="tabela">'
+    + '<div class="linha-desp cabec"><span>Descrição</span><span>Categoria</span><span>Data</span>'
+    + '<span style="text-align:right">Valor</span><span>Status</span><span></span></div>'
+    + lista.map(function(d){
+        return '<div class="linha-desp">'
+          + '<span class="desp-nome">'+escapar(d.descricao)+'</span>'
+          + '<span><span class="desp-cat">'+escapar(d.categoria)+'</span></span>'
+          + '<span class="desp-data">'+dataCurta(d.data)+'</span>'
+          + '<span class="desp-valor">'+dinheiro(d.valor)+'</span>'
+          + '<button class="selo '+(d.pago?'selo-pago':'selo-pendente')+' js-toggle-desp" data-id="'+d.id+'" title="Clique para trocar o status">'
+          + (d.pago?'Paga':'Em aberto')+'</button>'
+          + '<span style="display:flex;gap:4px">'
+          + '<button class="btn btn-linha btn-p js-edit-desp" data-id="'+d.id+'">Editar</button>'
+          + '<button class="desp-lixo js-del-desp" data-id="'+d.id+'" title="Excluir">✕</button></span>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+document.getElementById('lista-despesas').addEventListener('click', function(e){
+  var a;
+  if((a = e.target.closest('.js-toggle-desp'))){
+    var d = acharDespesa(a.dataset.id);
+    if(d){
+      var novoEstado = !d.pago;
+      aplicar('/api/despesas/' + d.id, 'PATCH', {pago: novoEstado})
+        .then(function(){ avisar(novoEstado ? 'Despesa quitada.' : 'Voltou para em aberto.'); })
+        .catch(function(err){ avisar(err.message); });
+    }
+    return;
+  }
+  if((a = e.target.closest('.js-edit-desp'))) return modalDespesa(a.dataset.id);
+  if((a = e.target.closest('.js-del-desp')))  return removerDespesa(a.dataset.id);
+  if(e.target.closest('.js-nova-despesa'))    return modalDespesa(null);
+});
+
+function acharDespesa(did){ return estado.despesas.filter(function(d){ return d.id === did; })[0]; }
+
+function removerDespesa(did){
+  var d = acharDespesa(did); if(!d) return;
+  if(!confirm('Excluir a despesa "' + d.descricao + '"?')) return;
+  aplicar('/api/despesas/' + did, 'DELETE')
+    .then(function(){ avisar('Despesa excluída.'); })
+    .catch(function(e){ avisar(e.message); });
+}
+
+function modalDespesa(did){
+  var d = did ? acharDespesa(did) : null;
+  var novo = !d;
+  var html =
+      '<div class="campo"><label for="d-desc">Descrição</label>'
+    + '<input id="d-desc" type="text" value="'+escapar(d?d.descricao:'')+'" placeholder="Ex.: Aluguel da sala"></div>'
+    + '<div class="campo"><label for="d-cat">Categoria</label>'
+    + '<input id="d-cat" type="text" list="cat-desp" value="'+escapar(d?d.categoria:'')+'" placeholder="Aluguel, Energia, Salários...">'
+    + '<datalist id="cat-desp"><option>Aluguel</option><option>Energia</option><option>Água</option>'
+    + '<option>Internet</option><option>Salários</option><option>Produtos</option><option>Impostos</option>'
+    + '<option>Marketing</option><option>Manutenção</option><option>Equipamento</option><option>Outros</option></datalist></div>'
+    + '<div class="linha-dupla">'
+    + '<div class="campo"><label for="d-valor">Valor (R$)</label>'
+    + '<input id="d-valor" type="number" step="0.01" min="0" value="'+(d?d.valor:'')+'" placeholder="0,00"></div>'
+    + '<div class="campo"><label for="d-data">Data</label>'
+    + '<input id="d-data" type="date" value="'+(d?d.data:isoData(hoje()))+'"></div></div>'
+    + '<div class="campo"><label>Situação</label><div class="escolha-status">'
+    + '<label><input type="radio" name="d-pago" value="1"'+((d&&d.pago)||novo?' checked':'')+'><span>Paga</span></label>'
+    + '<label><input type="radio" name="d-pago" value="0"'+((d&&!d.pago)?' checked':'')+'><span>Em aberto</span></label>'
+    + '</div></div>';
+
+  abrirModal(novo ? 'Nova despesa' : 'Editar despesa', html, async function(fechar){
+    var desc = document.getElementById('d-desc').value.trim();
+    var valor = parseFloat(document.getElementById('d-valor').value);
+    if(desc.length < 2){ erroModal('Escreva a descrição da despesa.'); return; }
+    if(isNaN(valor) || valor < 0){ erroModal('Informe o valor.'); return; }
+    var dados = {
+      descricao: desc,
+      categoria: document.getElementById('d-cat').value.trim() || 'Outros',
+      valor: valor,
+      data: document.getElementById('d-data').value || isoData(hoje()),
+      pago: document.querySelector('input[name="d-pago"]:checked').value === '1'
+    };
+    try{
+      if(novo){
+        await aplicar('/api/despesas', 'POST', dados);
+        avisar('Despesa lançada.');
+      }else{
+        await aplicar('/api/despesas/' + did, 'PUT', dados);
+        avisar('Despesa atualizada.');
+      }
+      fechar();
+    }catch(e){ erroModal(e.message); }
+  }, novo ? 'Lançar despesa' : 'Salvar alterações');
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function desenharTudo(){
+  desenharPainel();
+  desenharPacientes();
+  desenharProcedimentos();
+  desenharEstoque();
+  desenharDespesas();
+}
+
+// Se ja existe token guardado, tenta voltar direto pro sistema.
+// Se o token venceu, o api() derruba pra tela de login sozinho.
+(async function iniciar(){
+  if(!token) return;
+  try{
+    var dados = await api('/api/dados');
+    estado = dados;
+    var carga = JSON.parse(atob(token.split('.')[1]));
+    await entrar({nome: carga.nome, email: carga.email});
+  }catch(e){
+    guardarToken(null);
+  }
+})();
+</script>
+</body>
+</html>
