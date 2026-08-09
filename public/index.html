@@ -371,6 +371,24 @@ button{cursor:pointer;background:none;border:none}
 .desp-lixo:hover{color:var(--rosa)}
 
 /* ============================================================
+   ACESSOS
+   ============================================================ */
+.linha-acesso{
+  display:grid;grid-template-columns:1fr 150px 110px auto;
+  gap:14px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--ink-06);
+}
+.linha-acesso:last-child{border-bottom:none}
+.linha-acesso.destaque{background:rgba(199,163,212,.10)}
+.acesso-nome{font-size:15px}
+.acesso-email{font-size:12.5px;color:var(--ink-40);word-break:break-all}
+.acesso-meta{font-size:12.5px;color:var(--ink-40)}
+.acesso-botoes{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.selo-admin{background:var(--mulberry);color:#fff}
+.selo-espera{background:var(--rosa-claro);color:var(--rosa)}
+.btn-perigo{border:1px solid rgba(168,50,74,.4);color:var(--rosa)}
+.btn-perigo:hover{background:var(--rosa);color:#fff;border-color:var(--rosa)}
+
+/* ============================================================
    VAZIO
    ============================================================ */
 .vazio{
@@ -445,6 +463,8 @@ button{cursor:pointer;background:none;border:none}
   .menu-item{font-size:10px}
   .menu-item .glifo{font-size:14px}
   .linha-desp{grid-template-columns:1fr auto auto;row-gap:8px;padding:14px 16px}
+  .linha-acesso{grid-template-columns:1fr;row-gap:10px;padding:16px}
+  .acesso-botoes{justify-content:flex-start}
   .linha-desp.cabec{display:none}
   .desp-cat{grid-column:1}
   .desp-data{grid-column:1}
@@ -507,7 +527,7 @@ button{cursor:pointer;background:none;border:none}
       <!-- CRIAR CONTA -->
       <section id="v-cadastro" class="oculto">
         <h2>Criar uma conta</h2>
-        <p class="subtexto">Os dados ficam salvos neste computador.</p>
+        <p class="subtexto">O administrador precisa liberar antes do primeiro acesso.</p>
         <div class="campo">
           <label for="cad-nome">Seu nome</label>
           <input type="text" id="cad-nome" placeholder="Como aparece na recepção">
@@ -600,6 +620,7 @@ button{cursor:pointer;background:none;border:none}
       <button class="menu-item" data-aba="procedimentos"><span class="glifo">✦</span> Procedimentos</button>
       <button class="menu-item" data-aba="estoque"><span class="glifo">▦</span> Estoque</button>
       <button class="menu-item" data-aba="despesas"><span class="glifo">↓</span> Despesas</button>
+      <button class="menu-item oculto" data-aba="acessos" id="menu-acessos"><span class="glifo">◇</span> Acessos</button>
     </div>
 
     <div class="lateral-rodape">
@@ -845,6 +866,18 @@ button{cursor:pointer;background:none;border:none}
       <div id="lista-despesas"></div>
     </section>
 
+    <!-- ACESSOS (só o administrador vê) -->
+    <section id="aba-acessos" class="oculto">
+      <div class="cabecalho">
+        <div>
+          <div class="olhinho">Administração</div>
+          <h1>Acessos</h1>
+          <p>Quem pode entrar no sistema. Contas novas ficam esperando sua liberação.</p>
+        </div>
+      </div>
+      <div id="lista-acessos"></div>
+    </section>
+
   </main>
 </div>
 
@@ -902,6 +935,7 @@ var termoBusca = '';
 var filtroItem = 'todos';
 var buscaItem = '';
 var filtroDespesa = 'todas';
+var ehAdmin = false;
 var buscaDespesa = '';
 var codigoAtual = '';
 var emailRecuperacao = '';
@@ -1008,6 +1042,13 @@ document.getElementById('btn-criar-conta').addEventListener('click', async funct
       email: document.getElementById('cad-email').value.trim().toLowerCase(),
       senha: document.getElementById('cad-senha').value
     }});
+    if(r.pendente){
+      // conta criada, mas so entra depois que o administrador liberar
+      trocarVista('v-login');
+      document.getElementById('login-erro').textContent = r.mensagem;
+      document.getElementById('login-email').value = document.getElementById('cad-email').value.trim();
+      return;
+    }
     guardarToken(r.token);
     avisar('Conta criada.');
     await entrar(r.usuario);
@@ -1086,6 +1127,9 @@ async function entrar(conta){
   document.getElementById('mes-ref').value = mesAtual;
   document.getElementById('mes-despesa').value = mesAtual;
 
+  ehAdmin = conta.papel === 'admin';
+  document.getElementById('menu-acessos').classList.toggle('oculto', !ehAdmin);
+
   await carregarDados();
   document.getElementById('tela-acesso').classList.add('oculto');
   document.getElementById('tela-app').classList.remove('oculto');
@@ -1112,7 +1156,7 @@ document.querySelectorAll('.menu-item').forEach(function(b){
   b.addEventListener('click', function(){
     document.querySelectorAll('.menu-item').forEach(function(x){ x.classList.remove('ativo'); });
     b.classList.add('ativo');
-    ['painel','pacientes','procedimentos','estoque','despesas'].forEach(function(a){
+    ['painel','pacientes','procedimentos','estoque','despesas','acessos'].forEach(function(a){
       document.getElementById('aba-'+a).classList.toggle('oculto', a !== b.dataset.aba);
     });
     window.scrollTo(0,0);
@@ -1996,7 +2040,90 @@ function desenharTudo(){
   desenharProcedimentos();
   desenharEstoque();
   desenharDespesas();
+  if(ehAdmin) desenharAcessos();
 }
+
+/* ============================================================
+   ACESSOS (administrador)
+   ============================================================ */
+async function desenharAcessos(){
+  var el = document.getElementById('lista-acessos');
+  var lista;
+  try{
+    lista = await api('/api/admin/usuarios');
+  }catch(e){
+    el.innerHTML = '<div class="vazio"><h3>Não deu para carregar</h3><p>' + escapar(e.message) + '</p></div>';
+    return;
+  }
+
+  var esperando = lista.filter(function(u){ return u.status === 'pendente'; }).length;
+
+  el.innerHTML =
+      '<div class="faixa-resumo">'
+    +   '<div class="faixa-item"><div class="rot">Esperando liberação</div>'
+    +   '<div class="val' + (esperando ? ' alerta' : '') + '">' + esperando + '</div></div>'
+    +   '<div class="faixa-item"><div class="rot">Contas liberadas</div>'
+    +   '<div class="val">' + lista.filter(function(u){ return u.status === 'aprovado'; }).length + '</div></div>'
+    +   '<div class="faixa-item"><div class="rot">Recusadas</div>'
+    +   '<div class="val">' + lista.filter(function(u){ return u.status === 'recusado'; }).length + '</div></div>'
+    + '</div>'
+    + '<div class="tabela">'
+    + lista.map(function(u){
+        var selo = u.papel === 'admin'
+          ? '<span class="selo selo-admin">Administrador</span>'
+          : (u.status === 'aprovado' ? '<span class="selo selo-pago">Liberado</span>'
+            : u.status === 'pendente' ? '<span class="selo selo-espera">Esperando</span>'
+            : '<span class="selo selo-pendente">Recusado</span>');
+
+        var botoes = '';
+        if(u.papel !== 'admin'){
+          if(u.status !== 'aprovado'){
+            botoes += '<button class="btn btn-linha btn-p js-liberar" data-id="'+u.id+'">Liberar</button>';
+          }
+          if(u.status !== 'recusado'){
+            botoes += '<button class="btn btn-linha btn-p js-recusar" data-id="'+u.id+'">Recusar</button>';
+          }
+          botoes += '<button class="btn btn-p btn-perigo js-apagar-conta" data-id="'+u.id+'" data-nome="'+escapar(u.nome)+'" data-pac="'+u.pacientes+'">Apagar</button>';
+        }else{
+          botoes = '<span class="acesso-meta">' + (u.souEu ? 'é você' : '—') + '</span>';
+        }
+
+        return '<div class="linha-acesso'+(u.status === 'pendente' ? ' destaque' : '')+'">'
+          + '<div><div class="acesso-nome">'+escapar(u.nome)+'</div>'
+          + '<div class="acesso-email">'+escapar(u.email)+'</div></div>'
+          + '<div>'+selo+'</div>'
+          + '<div class="acesso-meta">'+u.pacientes+' pacientes</div>'
+          + '<div class="acesso-botoes">'+botoes+'</div>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+document.getElementById('lista-acessos').addEventListener('click', async function(e){
+  var a;
+  try{
+    if((a = e.target.closest('.js-liberar'))){
+      await api('/api/admin/usuarios/' + a.dataset.id, {metodo:'PATCH', corpo:{status:'aprovado'}});
+      avisar('Acesso liberado.');
+      return desenharAcessos();
+    }
+    if((a = e.target.closest('.js-recusar'))){
+      await api('/api/admin/usuarios/' + a.dataset.id, {metodo:'PATCH', corpo:{status:'recusado'}});
+      avisar('Acesso recusado.');
+      return desenharAcessos();
+    }
+    if((a = e.target.closest('.js-apagar-conta'))){
+      var aviso = 'Apagar a conta de ' + a.dataset.nome + '?';
+      if(Number(a.dataset.pac) > 0){
+        aviso += '\n\nIsso apaga junto os ' + a.dataset.pac + ' pacientes dela, com atendimentos, estoque e despesas. Não tem como desfazer.';
+      }
+      if(!confirm(aviso)) return;
+      await api('/api/admin/usuarios/' + a.dataset.id, {metodo:'DELETE'});
+      avisar('Conta apagada.');
+      return desenharAcessos();
+    }
+  }catch(err){ avisar(err.message); }
+});
 
 // Se ja existe token guardado, tenta voltar direto pro sistema.
 // Se o token venceu, o api() derruba pra tela de login sozinho.
@@ -2006,7 +2133,7 @@ function desenharTudo(){
     var dados = await api('/api/dados');
     estado = dados;
     var carga = JSON.parse(atob(token.split('.')[1]));
-    await entrar({nome: carga.nome, email: carga.email});
+    await entrar({nome: carga.nome, email: carga.email, papel: carga.papel});
   }catch(e){
     guardarToken(null);
   }

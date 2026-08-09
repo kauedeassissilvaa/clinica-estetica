@@ -123,7 +123,51 @@ async function criarTabelas() {
   for (const sql of TABELAS) {
     await pool.query(sql);
   }
+  await migrarAprovacao();
   console.log('[db] tabelas conferidas');
+}
+
+/*
+  Migracao do controle de acesso.
+  Rodar ALTER TABLE direto quebraria no segundo deploy, entao antes
+  perguntamos ao information_schema se a coluna ja existe.
+*/
+async function migrarAprovacao() {
+  const [colunas] = await pool.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'`
+  );
+  const nomes = colunas.map(c => c.COLUMN_NAME);
+
+  if (!nomes.includes('status')) {
+    await pool.query(
+      `ALTER TABLE usuarios
+         ADD COLUMN status ENUM('pendente','aprovado','recusado') NOT NULL DEFAULT 'pendente'`
+    );
+    // quem ja existia antes desta trava continua entrando normalmente
+    await pool.query(`UPDATE usuarios SET status = 'aprovado'`);
+    console.log('[db] coluna status criada; contas existentes foram aprovadas');
+  }
+
+  if (!nomes.includes('papel')) {
+    await pool.query(
+      `ALTER TABLE usuarios
+         ADD COLUMN papel ENUM('admin','usuario') NOT NULL DEFAULT 'usuario'`
+    );
+  }
+
+  // a primeira conta do sistema e a dona: vira admin e ja nasce aprovada
+  const [admins] = await pool.query(`SELECT id FROM usuarios WHERE papel = 'admin' LIMIT 1`);
+  if (!admins.length) {
+    const [primeiro] = await pool.query(`SELECT MIN(id) AS id FROM usuarios`);
+    if (primeiro[0] && primeiro[0].id) {
+      await pool.query(
+        `UPDATE usuarios SET papel = 'admin', status = 'aprovado' WHERE id = ?`,
+        [primeiro[0].id]
+      );
+      console.log('[db] conta ' + primeiro[0].id + ' definida como administradora');
+    }
+  }
 }
 
 module.exports = { pool, criarTabelas };

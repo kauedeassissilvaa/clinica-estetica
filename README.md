@@ -2,6 +2,8 @@
 
 Node + Express + MySQL, pronto para o Railway. Cada conta criada é uma clínica independente: os pacientes, procedimentos, estoque e despesas de uma conta não aparecem para nenhuma outra.
 
+**Acesso é por aprovação.** A primeira conta criada vira administradora. Da segunda em diante, quem se cadastra fica esperando na aba **Acessos** até o administrador liberar.
+
 ---
 
 ## O que tem dentro
@@ -133,6 +135,8 @@ Abra `http://localhost:3000`.
 
 ## Detalhes que valem saber
 
+**Controle de acesso.** Cadastrar não dá acesso: a conta nasce com status `pendente` e o login é recusado até o administrador liberar na aba **Acessos**. O status é relido do banco a cada requisição, então recusar alguém derruba o acesso na hora, mesmo que a pessoa já esteja logada com token válido. O administrador não consegue bloquear nem apagar a própria conta, e ninguém consegue mexer numa conta admin.
+
 **Isolamento entre contas.** Toda query tem `usuario_id = ?` no `WHERE`, inclusive nos `UPDATE` e `DELETE`. Se alguém adivinhar o id de um paciente de outra conta e tentar apagar, a resposta é "não encontrado" e nada acontece. Isso foi testado.
 
 **Movimentação de estoque é transacional.** Entrada, baixa e a despesa gerada pela compra acontecem numa transação com `SELECT ... FOR UPDATE`. Se duas pessoas derem baixa no mesmo produto ao mesmo tempo, uma espera a outra — não dá para o saldo ficar negativo.
@@ -157,6 +161,9 @@ Abra `http://localhost:3000`.
 | POST | `/api/auth/entrar` | login, devolve token |
 | POST | `/api/auth/esqueci` | gera código de recuperação |
 | POST | `/api/auth/redefinir` | troca a senha com o código |
+| GET | `/api/admin/usuarios` | lista de acessos (só admin) |
+| PATCH | `/api/admin/usuarios/:id` | liberar / recusar (só admin) |
+| DELETE | `/api/admin/usuarios/:id` | apagar conta e dados (só admin) |
 | GET | `/api/dados` | carrega a clínica inteira |
 | GET | `/api/saude` | checar se o deploy subiu |
 | POST/PUT/DELETE | `/api/pacientes[/:id]` | fichas |

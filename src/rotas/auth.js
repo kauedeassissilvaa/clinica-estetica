@@ -50,12 +50,20 @@ rotas.post('/registrar', async (req, res, next) => {
     if (existe.length) return res.status(409).json({ erro: 'Esse e-mail já tem conta.' });
 
     const hash = await hashSenha(senha);
+
+    // A primeira conta do sistema e a dona: vira admin e ja entra liberada.
+    // Da segunda em diante, fica pendente ate o administrador aprovar.
+    const [quantos] = await pool.query('SELECT COUNT(*) AS total FROM usuarios');
+    const primeira = Number(quantos[0].total) === 0;
+    const papel = primeira ? 'admin' : 'usuario';
+    const status = primeira ? 'aprovado' : 'pendente';
+
     const conexao = await pool.getConnection();
     try {
       await conexao.beginTransaction();
       const [r] = await conexao.query(
-        'INSERT INTO usuarios (nome, email, senha_hash) VALUES (?, ?, ?)',
-        [nome, email, hash]
+        'INSERT INTO usuarios (nome, email, senha_hash, status, papel) VALUES (?, ?, ?, ?, ?)',
+        [nome, email, hash, status, papel]
       );
       const usuarioId = r.insertId;
 
@@ -68,7 +76,15 @@ rotas.post('/registrar', async (req, res, next) => {
       }
       await conexao.commit();
 
-      const usuario = { id: usuarioId, nome, email };
+      if (!primeira) {
+        console.log(`[acesso] nova conta aguardando liberacao: ${nome} <${email}>`);
+        return res.status(202).json({
+          pendente: true,
+          mensagem: 'Conta criada. Ela precisa ser liberada pelo administrador antes do primeiro acesso.'
+        });
+      }
+
+      const usuario = { id: usuarioId, nome, email, papel };
       res.status(201).json({ token: gerarToken(usuario), usuario });
     } catch (e) {
       await conexao.rollback();
@@ -91,7 +107,7 @@ rotas.post('/entrar', async (req, res, next) => {
     }
 
     const [linhas] = await pool.query(
-      'SELECT id, nome, email, senha_hash FROM usuarios WHERE email = ?', [email]
+      'SELECT id, nome, email, senha_hash, status, papel FROM usuarios WHERE email = ?', [email]
     );
     const u = linhas[0];
 
@@ -102,8 +118,16 @@ rotas.post('/entrar', async (req, res, next) => {
       return res.status(401).json({ erro: 'E-mail ou senha incorretos.' });
     }
 
+    // a senha confere, mas o acesso ainda depende do administrador
+    if (u.status === 'pendente') {
+      return res.status(403).json({ erro: 'Sua conta ainda não foi liberada pelo administrador.' });
+    }
+    if (u.status === 'recusado') {
+      return res.status(403).json({ erro: 'Este acesso não foi autorizado.' });
+    }
+
     tentativas.delete(chave);
-    const usuario = { id: u.id, nome: u.nome, email: u.email };
+    const usuario = { id: u.id, nome: u.nome, email: u.email, papel: u.papel };
     res.json({ token: gerarToken(usuario), usuario });
   } catch (e) { next(e); }
 });

@@ -24,6 +24,7 @@ app.use('/api', exigirLogin, require('./src/rotas/pacientes'));
 app.use('/api', exigirLogin, require('./src/rotas/procedimentos'));
 app.use('/api', exigirLogin, require('./src/rotas/produtos'));
 app.use('/api', exigirLogin, require('./src/rotas/despesas'));
+app.use('/api', exigirLogin, require('./src/rotas/admin'));
 
 app.use('/api', (req, res) => res.status(404).json({ erro: 'Rota não encontrada.' }));
 
